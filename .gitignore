@@ -8,3 +8,6 @@ cmake-build-debug/
 
 # intellij config
 .idea/
+
+# clang-format temporary files
+format.tmp

@@ -3,4 +3,4 @@
 
 int add(int a, int b);
 
-#endif //ZPR_2020Z_FUN_H
+#endif  // ZPR_2020Z_FUN_H
