@@ -11,12 +11,12 @@ Po sklonowaniu repo należy wykonać następujące kroki:
    ```
    mkdir build
    cd build
-   cmake ../
+   cmake ..
    make 
    ```
-3. Uruchom przykładowy program i testy
+3. Uruchom przykładowe testy
    ```
-   cd build
-   ./ZPR-2020Z
-   ./test/ZPR-2020Z-test
+   cd build/atomic-list/test
+   ./ZPR-2020Z-atomic-list-test
    ```
+   Jeśli wszystko poszło pomyślnie program powinien zakończyś się jednym poprawnie wykonanym testem

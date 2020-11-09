@@ -1,4 +1,10 @@
+# vim temp files
 *.swp
 *~
+
+# build directories
 build/
+cmake-build-debug/
+
+# intellij config
 .idea/

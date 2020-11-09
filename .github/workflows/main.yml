@@ -1,0 +1,14 @@
+on: [push]
+
+jobs:
+  unit_test_job:
+    runs-on: ubuntu-latest
+    name: Unit tests
+    steps:
+      # To use this repository's private action,
+      # you must check out the repository
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build and test atomic-list
+        uses: ./atomic-list # Uses an action in the root directory
+        id: atomic-list
