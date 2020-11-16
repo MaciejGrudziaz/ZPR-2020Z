@@ -11,4 +11,4 @@ echo ""
 echo "Running tests coverage for $TEST_PROJECT:"
 echo ""
 
-gcovr -f ".*atomic-list.*" --exclude-directories ".*test" -r .
+gcovr -f "atomic/src/.*" -r .

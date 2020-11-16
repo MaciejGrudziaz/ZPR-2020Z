@@ -9,6 +9,6 @@ jobs:
       # you must check out the repository
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Build and test atomic-list
-        uses: ./atomic-list # Uses an action in the root directory
-        id: atomic-list
+      - name: Build and test atomic
+        uses: ./atomic # Uses an action in the root directory
+        id: atomic

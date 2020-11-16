@@ -13,7 +13,7 @@ set(BOOST_ENABLE_CMAKE ON)
 
 add_subdirectory(boost)
 add_subdirectory(googletest)
-add_subdirectory(atomic-list)
+add_subdirectory(atomic)
 
 include_directories(
         boost/libs

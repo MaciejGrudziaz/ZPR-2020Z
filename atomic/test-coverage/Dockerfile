@@ -2,7 +2,7 @@ FROM alpine:latest AS build
 
 RUN apk add --no-cache -q -f cmake make g++
 
-ADD ./src /home
+ADD atomic-list/src /home
 WORKDIR /home
 RUN mkdir build && cd build && cmake .. && make && cp libZPR-2020Z-atomic-list.so /lib/
 
@@ -16,9 +16,16 @@ RUN git clone -q https://github.com/google/googletest.git /googletest \
   && cmake .. && make && make install \
   && cd / && rm -rf /googletest
 
-ADD ./test /home
+ADD atomic-list/test /home
 WORKDIR /home
 
 RUN cd build && cmake .. && make
 
-ENTRYPOINT /home/build/ZPR-2020Z-atomic-list-test
+FROM tests AS coverage
+
+RUN apk add --update --no-cache python3-dev py3-pip libxml2-dev libxslt-dev && ln -sf python3 /usr/bin/python
+RUN pip3 install gcovr
+
+RUN ls -al /home
+
+ENTRYPOINT /home/run-tests-and-coverage.sh
