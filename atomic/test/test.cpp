@@ -9,7 +9,7 @@ TEST(TestCase, TestName) {
 
 
 
-    atomic_list::Atomic_Blist<int> l;
-    
+    atomic_list::Atomic_Blist<int> li;
+
 
 }
