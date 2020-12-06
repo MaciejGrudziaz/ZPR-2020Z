@@ -16,7 +16,7 @@ touch $FORMAT_TMP
 for DIR in ${DIRECTORIES[*]}; do
   for FILE in $(find $DIR -name *.cpp -o -name *.h -o -name *.hpp); do
     clang-format-10 --style="$STYLE" --verbose --Werror $FILE > $FORMAT_TMP
-    git diff --no-index $FILE $FORMAT_TMP
+    git --no-pager diff --no-index $FILE $FORMAT_TMP
     cp $FORMAT_TMP $FILE
   done
 done
