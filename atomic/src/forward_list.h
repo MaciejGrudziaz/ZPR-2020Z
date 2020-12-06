@@ -56,8 +56,8 @@ public:
     void push_front(const T& val);
     void push_front(T&& val);
 
-    iterator begin();
-    iterator end();
+    iterator begin() const;
+    iterator end() const;
 
 private:
     std::shared_ptr<node> _begin;

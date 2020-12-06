@@ -48,12 +48,12 @@ void forward_list<T>::push_front(T&& val) {
 }
 
 template <class T>
-typename forward_list<T>::iterator forward_list<T>::begin() {
+typename forward_list<T>::iterator forward_list<T>::begin() const {
     return iterator(_begin);
 }
 
 template <class T>
-typename forward_list<T>::iterator forward_list<T>::end() {
+typename forward_list<T>::iterator forward_list<T>::end() const {
     return iterator(_end);
 }
 

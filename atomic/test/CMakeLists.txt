@@ -6,8 +6,8 @@ include_directories(${CMAKE_SOURCE_DIR}/googletest)
 include_directories(${CMAKE_SOURCE_DIR}/atomic/src)
 
 add_executable(${PROJECT_NAME}
-    test.cpp
     forward_list_test.cpp
+    list_test.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
