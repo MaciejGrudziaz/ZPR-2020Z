@@ -6,7 +6,11 @@ template <class T>
 
 class list_node{
     T get_container();
-    void push_container(T);
+    void push_container(T new_container){
+    container=new_container;
+
+
+    }
 
     private:
     std::shared_ptr<list_node> prev_elem;
