@@ -1,6 +1,8 @@
 #ifndef BDIR_LIST_INTERFACE
 #define BDIR_LIST_INTERFACE
 #include <memory>
+#include <../../boost/interprocess/sync/interprocess_mutex.hpp>
+
 #include "bdir_list_node.hpp"
 
 namespace atomic_list {
@@ -99,6 +101,12 @@ void push_front(T new_class)
     if(first_elem)
     {
         std::shared_ptr< atomic_list::list_node<T> >tmp=std::make_shared<list_node<T>>(new_class);
+        tmp->prev_elem=first_elem;
+        first_elem->next_elem=tmp;
+        tmp->next_elem=last_elem.lock();
+        first_elem=tmp;
+
+
 
     }
     else
