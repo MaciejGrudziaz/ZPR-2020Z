@@ -8,16 +8,27 @@ namespace atomic_list {
 template <class T>
 
 class Atomic_Blist {
+
 public:
+
+Atomic_Blist()
+{
+    size=0;
+}
+
+
+
 void pop_back()
 {
+        
 if(size>1){
 
-    if(last_elem.lock()==pointed_elem)
+    if(last_elem.lock()->get()==pointed_elem->get())
     {
-        last_elem=last_elem.lock()->next_elem;
+               last_elem=last_elem.lock()->next_elem.lock();
         pointed_elem=last_elem.lock();
         pointed_elem->prev_elem=first_elem;
+
     } 
     else
     {
@@ -25,10 +36,11 @@ if(size>1){
         last_elem.lock()->prev_elem=first_elem;
     }
     
-
+size--;
 }
 else if(size <=1)
 {
+  
     last_elem.reset();
     first_elem.reset();
     pointed_elem.reset();
@@ -36,23 +48,23 @@ else if(size <=1)
 
 }  
 void pop_front(){
-    if(size>1){
-
+if(size>1){
     if(first_elem==pointed_elem)
     {
         first_elem=first_elem->prev_elem;
         last_elem.lock()->next_elem=first_elem;
         first_elem->next_elem=last_elem;
         pointed_elem=first_elem;
+
     } 
     else
     {
         first_elem=first_elem->prev_elem;
         last_elem.lock()->next_elem=first_elem;
         first_elem->next_elem=last_elem;
-    }
-    
 
+    }    
+size--;
 }
 else if(size <=1)
 {
@@ -60,8 +72,8 @@ else if(size <=1)
     first_elem.reset();
     pointed_elem.reset();
 } 
+}   
 
-}          
 void push_back(T new_class){
     if(last_elem.lock())
     {
@@ -70,7 +82,7 @@ void push_back(T new_class){
         tmp->next_elem=last_elem;
         tmp->prev_elem=first_elem;
         last_elem=tmp;
-        size++;
+        
     }
     else
     {
@@ -79,16 +91,15 @@ void push_back(T new_class){
         tmp->prev_elem=tmp;
         last_elem=tmp;
         first_elem=tmp;
-        size++;
     }
+size++;
 }    
 void push_front(T new_class)
 {
-        if(first_elem)
+    if(first_elem)
     {
         std::shared_ptr< atomic_list::list_node<T> >tmp=std::make_shared<list_node<T>>(new_class);
- 
-        size++;
+
     }
     else
     {
@@ -97,14 +108,17 @@ void push_front(T new_class)
         tmp->prev_elem=tmp;
         last_elem=tmp;
         first_elem=tmp;
-        size++;
+
     }
+    size++;
 }
+
 T begin(){
     pointed_elem=first_elem;
     return pointed_elem->get();
 }                   
 T end(){
+
     pointed_elem=last_elem.lock();
     return pointed_elem->get();
 }
@@ -141,6 +155,16 @@ std::weak_ptr <atomic_list::list_node<T> > last_elem;
 std::shared_ptr<atomic_list::list_node<T>> pointed_elem;
 int size;
 int elem_iterator;
+
+
+class iterator : public std::iterator<std::forward_iterator_tag, T, T, const T*,const T&>
+{
+
+
+};
+
+
+
 
 };
 
