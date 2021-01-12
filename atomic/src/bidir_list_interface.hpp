@@ -9,9 +9,47 @@ namespace atomic_list {
 
 template <class T>
 
-class Atomic_Blist {
+class Atomic_Blist : public boost::interprocess::interprocess_mutex {
 
 public:
+
+   class iterator : public std::iterator<std::bidirectional_iterator_tag,T,T> {
+    public:
+        explicit iterator(std::shared_ptr<atomic_list::list_node<T>> node): _node(node){}       
+        iterator& operator++(){
+            if(_node->prev_elem)
+            {
+                _node=_node->prev_elem;
+            }
+            return *this;
+        }
+        iterator operator++(int){
+        auto curr_it = iterator(_node);
+        if (_node->prev_elem) {
+            _node = _node->prev_elem;
+            }
+            return curr_it;
+        }
+        iterator& operator--();
+        iterator operator--(int);
+
+        T& operator*() const {return _node->container;}
+        bool operator==(iterator other) const {return (_node.get() == other._node.get());}
+        bool operator!=(iterator other) const{ return  !(*this == other);}
+       
+
+    private:
+        std::shared_ptr<atomic_list::list_node<T>> _node;
+    };
+
+   
+
+
+
+
+
+
+
 
 Atomic_Blist()
 {
@@ -22,7 +60,7 @@ Atomic_Blist()
 
 void pop_back()
 {
-        
+
 if(size>1){
 
     if(last_elem.lock()->get()==pointed_elem->get())
@@ -77,6 +115,7 @@ else if(size <=1)
 }   
 
 void push_back(T new_class){
+    this->lock();
     if(last_elem.lock())
     {
         std::shared_ptr< atomic_list::list_node<T> >tmp=std::make_shared<list_node<T>>(new_class);
@@ -84,6 +123,7 @@ void push_back(T new_class){
         tmp->next_elem=last_elem;
         tmp->prev_elem=first_elem;
         last_elem=tmp;
+        first_elem->next_elem.reset();
         
     }
     else
@@ -95,6 +135,7 @@ void push_back(T new_class){
         first_elem=tmp;
     }
 size++;
+    this->unlock();
 }    
 void push_front(T new_class)
 {
@@ -105,9 +146,6 @@ void push_front(T new_class)
         first_elem->next_elem=tmp;
         tmp->next_elem=last_elem.lock();
         first_elem=tmp;
-
-
-
     }
     else
     {
@@ -121,14 +159,14 @@ void push_front(T new_class)
     size++;
 }
 
-T begin(){
+iterator begin(){
     pointed_elem=first_elem;
-    return pointed_elem->get();
+    return iterator(pointed_elem);
 }                   
-T end(){
+iterator end(){
 
     pointed_elem=last_elem.lock();
-    return pointed_elem->get();
+    return iterator(pointed_elem);
 }
 
 void clear()
@@ -138,21 +176,9 @@ void clear()
     pointed_elem.reset();
 }
 
-T getVal()
-{
-    return pointed_elem->get();
-}
 
-//operatory
-void operator ++()
-{
-pointed_elem=pointed_elem->next_elem.lock();
-};
-void operator --();
-T operator=(const Atomic_Blist & list)
-{
-return pointed_elem->get();
-}
+
+
 
 
 private:
@@ -165,11 +191,7 @@ int size;
 int elem_iterator;
 
 
-class iterator : public std::iterator<std::forward_iterator_tag, T, T, const T*,const T&>
-{
 
-
-};
 
 
 
