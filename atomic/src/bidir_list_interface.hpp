@@ -44,13 +44,6 @@ public:
 
    
 
-
-
-
-
-
-
-
 Atomic_Blist()
 {
     size=0;
@@ -58,23 +51,16 @@ Atomic_Blist()
 
 
 
-void pop_back()
+T pop_back()
 {
+this->lock();
+    T tmp = last_elem.lock()->get();
 
 if(size>1){
 
-    if(last_elem.lock()->get()==pointed_elem->get())
-    {
-               last_elem=last_elem.lock()->next_elem.lock();
-        pointed_elem=last_elem.lock();
-        pointed_elem->prev_elem=first_elem;
 
-    } 
-    else
-    {
         last_elem=last_elem.lock()->next_elem;
         last_elem.lock()->prev_elem=first_elem;
-    }
     
 size--;
 }
@@ -83,35 +69,29 @@ else if(size <=1)
   
     last_elem.reset();
     first_elem.reset();
-    pointed_elem.reset();
 }  
+this->unlock();
+return tmp;
+}  
+T pop_front(){
+    this->lock();
+    T tmp = first_elem->get();
+    if(size>1){
 
-}  
-void pop_front(){
-if(size>1){
-    if(first_elem==pointed_elem)
+            first_elem=first_elem->prev_elem;
+            last_elem.lock()->next_elem=first_elem;
+            first_elem->next_elem=last_elem;
+
+    
+    size--;
+    }
+    else if(size <=1)
     {
-        first_elem=first_elem->prev_elem;
-        last_elem.lock()->next_elem=first_elem;
-        first_elem->next_elem=last_elem;
-        pointed_elem=first_elem;
-
+        last_elem.reset();
+        first_elem.reset();
     } 
-    else
-    {
-        first_elem=first_elem->prev_elem;
-        last_elem.lock()->next_elem=first_elem;
-        first_elem->next_elem=last_elem;
-
-    }    
-size--;
-}
-else if(size <=1)
-{
-    last_elem.reset();
-    first_elem.reset();
-    pointed_elem.reset();
-} 
+    this->unlock();
+    return tmp;
 }   
 
 void push_back(T new_class){
@@ -139,6 +119,7 @@ size++;
 }    
 void push_front(T new_class)
 {
+    this->lock();
     if(first_elem)
     {
         std::shared_ptr< atomic_list::list_node<T> >tmp=std::make_shared<list_node<T>>(new_class);
@@ -157,23 +138,22 @@ void push_front(T new_class)
 
     }
     size++;
+    this->unlock();
 }
 
 iterator begin(){
-    pointed_elem=first_elem;
-    return iterator(pointed_elem);
+    return iterator(first_elem);
 }                   
 iterator end(){
-
-    pointed_elem=last_elem.lock();
-    return iterator(pointed_elem);
+    return iterator(last_elem.lock());
 }
 
 void clear()
 {
+    this->lock();
     last_elem.reset();
     first_elem.reset();
-    pointed_elem.reset();
+    this->unlock();
 }
 
 
@@ -186,7 +166,6 @@ private:
 std::shared_ptr< atomic_list::list_node<T> > first_elem;
 std::weak_ptr <atomic_list::list_node<T> > last_elem;
 
-std::shared_ptr<atomic_list::list_node<T>> pointed_elem;
 int size;
 int elem_iterator;
 
