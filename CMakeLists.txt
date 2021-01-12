@@ -5,7 +5,7 @@ project(ZPR-2020Z)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_CXX_FLAGS "-Wall -Werror -Wpedantic -fprofile-arcs -ftest-coverage -fPIC -O0")
+set(CMAKE_CXX_FLAGS "-Wall -Werror -Wpedantic -fprofile-arcs -ftest-coverage -fPIC -O0 -ggdb -fsanitize=leak -fno-omit-frame-pointer -static-liblsan -lrt -Wshadow-compatible-local")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

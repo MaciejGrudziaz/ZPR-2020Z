@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DIRECTORIES=(
-  atomic-list
+  atomic
 )
 
 BUILD_DIR=$(find . -name Makefile | grep -oP "\./[^/]+/Makefile" | grep -oP "\./\K[^/]+")
