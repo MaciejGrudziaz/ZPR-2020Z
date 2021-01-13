@@ -72,3 +72,55 @@ TEST(ForwardList, SectorsIterator) {
 
     EXPECT_EQ(count, 85);
 }
+
+TEST(ForwardList, InitializerListInit) {
+    atomic::forward_list<int> l({1, 2, 3, 4, 5});
+
+    EXPECT_EQ(l.size(), 5);
+    EXPECT_EQ(l.sector_count(), 1);
+
+    auto it = l.begin();
+    EXPECT_EQ(*it, 1);
+    EXPECT_EQ(*(++it), 2);
+    EXPECT_EQ(*(++it), 3);
+    EXPECT_EQ(*(++it), 4);
+    EXPECT_EQ(*(++it), 5);
+}
+
+TEST(ForwardList, PopFront) {
+    atomic::forward_list<int> l({1, 2, 3, 4, 5}, 2);
+
+    EXPECT_EQ(l.size(), 5);
+    EXPECT_EQ(l.sector_count(), 3);
+
+    l.pop_front();
+    l.pop_front();
+
+    EXPECT_EQ(l.size(), 3);
+    EXPECT_EQ(l.sector_count(), 2);
+    EXPECT_EQ(*l.begin(), 3);
+
+    l.pop_front();
+    l.pop_front();
+
+    EXPECT_EQ(l.size(), 1);
+    EXPECT_EQ(l.sector_count(), 1);
+    EXPECT_EQ(*l.begin(), 5);
+
+    l.pop_front();
+    EXPECT_TRUE(l.empty());
+}
+
+TEST(ForwardList, Atomic) {
+    atomic::forward_list<int> l({1, 2, 3, 4, 5}, 1);
+
+    {
+        auto it = l.begin();
+        auto it2 = it++;
+        *it = 8;
+        *it2 = 9;
+    }
+
+    EXPECT_EQ(*l.begin(), 9);
+    EXPECT_EQ(*(++l.begin()), 8);
+}

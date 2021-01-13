@@ -35,6 +35,15 @@ void forward_list<T>::sector::push_front(T&& val) {
 }
 
 template <class T>
+void forward_list<T>::sector::pop_front() {
+    if (_begin == _end) {
+        return;
+    }
+    _begin = _begin->_next;
+    --_size;
+}
+
+template <class T>
 typename forward_list<T>::sector::iterator forward_list<T>::sector::begin()
     const {
     return iterator(_begin);
@@ -49,6 +58,11 @@ typename forward_list<T>::sector::iterator forward_list<T>::sector::end()
 template <class T>
 std::size_t forward_list<T>::sector::size() const {
     return _size;
+}
+
+template <class T>
+bool forward_list<T>::sector::empty() const {
+    return _size == 0;
 }
 
 template <class T>
@@ -113,6 +127,19 @@ forward_list<T>::forward_list(std::size_t sector_size)
       _sector_count(0) {}
 
 template <class T>
+forward_list<T>::forward_list(std::initializer_list<T> list,
+                              std::size_t sector_size)
+    : _begin(std::make_shared<sector>(nullptr)),
+      _end(_begin),
+      _sector_size(sector_size),
+      _sector_count(0) {
+    for (auto it = list.end() - 1; it != list.begin(); --it) {
+        push_front(*it);
+    }
+    push_front(*list.begin());
+}
+
+template <class T>
 void forward_list<T>::clear() {
     _begin = _end;
 }
@@ -150,6 +177,18 @@ void forward_list<T>::push_front(T&& val) {
         ++_sector_count;
     }
     _begin->push_front(val);
+}
+
+template <class T>
+void forward_list<T>::pop_front() {
+    if (_begin == _end) {
+        return;
+    }
+    _begin->pop_front();
+    if (_begin->empty()) {
+        _begin = _begin->next();
+        --_sector_count;
+    }
 }
 
 template <class T>
@@ -215,6 +254,24 @@ typename forward_list<T>::iterator& forward_list<T>::iterator::operator++() {
         _sec_it = _sec->begin();
     }
     return *this;
+}
+
+template <class T>
+typename forward_list<T>::iterator forward_list<T>::iterator::operator++(int) {
+    auto _curr_sec = _sec;
+    auto _curr_sec_it = _sec_it;
+
+    operator++();
+
+    if (_curr_sec == _sec) {
+        throw std::runtime_error(
+            "cannot create two iterators on the same thread");
+    }
+
+    auto _prev_it = iterator(_curr_sec);
+    _prev_it._sec_it = _curr_sec_it;
+
+    return _prev_it;
 }
 
 template <class T>

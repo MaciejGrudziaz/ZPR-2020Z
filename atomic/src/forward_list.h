@@ -41,10 +41,13 @@ public:
         void push_front(const T& val);
         void push_front(T&& val);
 
+        void pop_front();
+
         iterator begin() const;
         iterator end() const;
 
         std::size_t size() const;
+        bool empty() const;
 
         std::shared_ptr<sector> next() const;
 
@@ -69,6 +72,7 @@ public:
         iterator& operator=(const sector_iterator& it);
         ~iterator();
         iterator& operator++();
+        iterator operator++(int);
         bool operator==(iterator other) const;
         bool operator!=(iterator other) const;
         T& operator*() const;
@@ -98,7 +102,7 @@ public:
     };
 
     forward_list(std::size_t sector_size = 10);
-    // forward_list(std::initializer_list<T> list);
+    forward_list(std::initializer_list<T> list, std::size_t sector_size = 10);
 
     void clear();
     std::size_t size() const;
@@ -106,6 +110,8 @@ public:
 
     void push_front(const T& val);
     void push_front(T&& val);
+
+    void pop_front();
 
     iterator begin() const;
     iterator end() const;
