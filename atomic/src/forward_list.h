@@ -60,42 +60,38 @@ public:
         mutable std::mutex _m;
     };
 
+    class sector_iterator;
+
     class iterator : public std::iterator<std::forward_iterator_tag, T> {
     public:
         explicit iterator(std::shared_ptr<sector> sec);
+        iterator(const sector_iterator& it);
+        iterator& operator=(const sector_iterator& it);
         ~iterator();
         iterator& operator++();
-        iterator operator++(int);
         bool operator==(iterator other) const;
         bool operator!=(iterator other) const;
         T& operator*() const;
+
+        const std::shared_ptr<sector>& get() const;
 
     private:
         std::shared_ptr<sector> _sec;
         typename sector::iterator _sec_it;
     };
 
-    //    class const_iterator : public std::iterator<std::forward_iterator_tag,
-    //    T, T, const T*, const T&> { public:
-    //        explicit const_iterator(std::shared_ptr<node> node);
-    //        const_iterator& operator++();
-    //        const_iterator operator++(int);
-    //        bool operator==(const_iterator other) const;
-    //        bool operator!=(const_iterator other) const;
-    //        const T& operator*() const;
-    //
-    //    private:
-    //        std::shared_ptr<node> _node;
-    //    };
-
     class sector_iterator : public std::iterator<std::forward_iterator_tag, T> {
     public:
         explicit sector_iterator(std::shared_ptr<sector> sec);
+        sector_iterator(const iterator& it);
+        sector_iterator& operator=(const sector_iterator& it);
         sector_iterator& operator++();
         sector_iterator operator++(int);
         bool operator==(const sector_iterator& other) const;
         bool operator!=(const sector_iterator& other) const;
         sector& operator*() const;
+
+        const std::shared_ptr<sector>& get() const;
 
     private:
         std::shared_ptr<sector> _sec;

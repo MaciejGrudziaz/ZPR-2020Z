@@ -190,6 +190,22 @@ forward_list<T>::iterator::~iterator() {
 }
 
 template <class T>
+forward_list<T>::iterator::iterator(const sector_iterator& it)
+    : _sec(it.get()), _sec_it(_sec->begin()) {
+    _sec->lock();
+}
+
+template <class T>
+typename forward_list<T>::iterator& forward_list<T>::iterator::operator=(
+    const sector_iterator& it) {
+    _sec->unlock();
+    _sec = it.get();
+    _sec->lock();
+    _sec_it = _sec->begin();
+    return *this;
+}
+
+template <class T>
 typename forward_list<T>::iterator& forward_list<T>::iterator::operator++() {
     _sec_it++;
     if (_sec_it == _sec->end() && _sec->next()) {
@@ -199,13 +215,6 @@ typename forward_list<T>::iterator& forward_list<T>::iterator::operator++() {
         _sec_it = _sec->begin();
     }
     return *this;
-}
-
-template <class T>
-typename forward_list<T>::iterator forward_list<T>::iterator::operator++(int) {
-    auto curr_it = iterator(_sec);
-    ++(*this);
-    return curr_it;
 }
 
 template <class T>
@@ -224,8 +233,25 @@ T& forward_list<T>::iterator::operator*() const {
 }
 
 template <class T>
+const std::shared_ptr<typename forward_list<T>::sector>&
+forward_list<T>::iterator::get() const {
+    return _sec;
+}
+
+template <class T>
 forward_list<T>::sector_iterator::sector_iterator(std::shared_ptr<sector> sec)
     : _sec(sec) {}
+
+template <class T>
+forward_list<T>::sector_iterator::sector_iterator(const iterator& it) {
+    _sec = it.get();
+}
+
+template <class T>
+typename forward_list<T>::sector_iterator&
+forward_list<T>::sector_iterator::operator=(const sector_iterator& it) {
+    _sec = it.get();
+}
 
 template <class T>
 typename forward_list<T>::sector_iterator&
@@ -260,6 +286,12 @@ template <class T>
 typename forward_list<T>::sector& forward_list<T>::sector_iterator::operator*()
     const {
     return *_sec;
+}
+
+template <class T>
+const std::shared_ptr<typename forward_list<T>::sector>&
+forward_list<T>::sector_iterator::get() const {
+    return _sec;
 }
 
 // template <class T>

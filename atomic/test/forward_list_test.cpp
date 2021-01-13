@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <numeric>
+#include <thread>
 
 TEST(ForwardList, InitTest) {
     atomic::forward_list<int> l;
@@ -49,4 +50,25 @@ TEST(ForwardList, Sectors) {
     EXPECT_EQ(++a, (*l.sector_begin()).end());
 
     EXPECT_EQ(std::accumulate(l.begin(), l.end(), 0), 300);
+}
+
+TEST(ForwardList, SectorsIterator) {
+    atomic::forward_list<int> l(5);
+
+    for (int i = 0; i < 20; ++i) {
+        l.push_front(i);
+    }
+
+    EXPECT_EQ(l.sector_count(), 4);
+
+    auto begin = l.sector_begin();
+    auto it = atomic::forward_list<int>::iterator(begin);
+    int count = 0;
+
+    while (begin == it) {
+        count += *it;
+        ++it;
+    }
+
+    EXPECT_EQ(count, 85);
 }
