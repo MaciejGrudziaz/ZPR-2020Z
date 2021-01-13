@@ -6,19 +6,14 @@
 namespace atomic {
 
 template <class T>
-forward_list<T>::node::node(std::shared_ptr<node> next)
-    : _next(std::move(next)) {}
+forward_list<T>::node::node(std::shared_ptr<node> next) : _next(std::move(next)) {}
 
 template <class T>
-forward_list<T>::node::node(T val, std::shared_ptr<node> next)
-    : _val(val), _next(std::move(next)) {}
+forward_list<T>::node::node(T val, std::shared_ptr<node> next) : _val(val), _next(std::move(next)) {}
 
 template <class T>
 forward_list<T>::sector::sector(std::shared_ptr<sector> next)
-    : _begin(std::make_shared<node>(nullptr)),
-      _end(_begin),
-      _size(0),
-      _next(next) {}
+    : _begin(std::make_shared<node>(nullptr)), _end(_begin), _size(0), _next(next) {}
 
 template <class T>
 void forward_list<T>::sector::push_front(const T& val) {
@@ -44,14 +39,12 @@ void forward_list<T>::sector::pop_front() {
 }
 
 template <class T>
-typename forward_list<T>::sector::iterator forward_list<T>::sector::begin()
-    const {
+typename forward_list<T>::sector::iterator forward_list<T>::sector::begin() const {
     return iterator(_begin);
 }
 
 template <class T>
-typename forward_list<T>::sector::iterator forward_list<T>::sector::end()
-    const {
+typename forward_list<T>::sector::iterator forward_list<T>::sector::end() const {
     return iterator(_end);
 }
 
@@ -66,8 +59,7 @@ bool forward_list<T>::sector::empty() const {
 }
 
 template <class T>
-std::shared_ptr<typename forward_list<T>::sector>
-forward_list<T>::sector::next() const {
+std::shared_ptr<typename forward_list<T>::sector> forward_list<T>::sector::next() const {
     return _next;
 }
 
@@ -82,12 +74,10 @@ void forward_list<T>::sector::unlock() const {
 }
 
 template <class T>
-forward_list<T>::sector::iterator::iterator(std::shared_ptr<node> node)
-    : _node(node) {}
+forward_list<T>::sector::iterator::iterator(std::shared_ptr<node> node) : _node(node) {}
 
 template <class T>
-typename forward_list<T>::sector::iterator&
-forward_list<T>::sector::iterator::operator++() {
+typename forward_list<T>::sector::iterator& forward_list<T>::sector::iterator::operator++() {
     if (_node->_next) {
         _node = _node->_next;
     }
@@ -95,22 +85,19 @@ forward_list<T>::sector::iterator::operator++() {
 }
 
 template <class T>
-typename forward_list<T>::sector::iterator
-forward_list<T>::sector::iterator::operator++(int) {
+typename forward_list<T>::sector::iterator forward_list<T>::sector::iterator::operator++(int) {
     auto curr_it = iterator(_node);
     ++(*this);
     return curr_it;
 }
 
 template <class T>
-bool forward_list<T>::sector::iterator::operator==(
-    const forward_list<T>::sector::iterator& other) const {
+bool forward_list<T>::sector::iterator::operator==(const forward_list<T>::sector::iterator& other) const {
     return _node.get() == other._node.get();
 }
 
 template <class T>
-bool forward_list<T>::sector::iterator::operator!=(
-    const forward_list<T>::sector::iterator& other) const {
+bool forward_list<T>::sector::iterator::operator!=(const forward_list<T>::sector::iterator& other) const {
     return !(*this == other);
 }
 
@@ -121,18 +108,11 @@ T& forward_list<T>::sector::iterator::operator*() const {
 
 template <class T>
 forward_list<T>::forward_list(std::size_t sector_size)
-    : _begin(std::make_shared<sector>(nullptr)),
-      _end(_begin),
-      _sector_size(sector_size),
-      _sector_count(0) {}
+    : _begin(std::make_shared<sector>(nullptr)), _end(_begin), _sector_size(sector_size), _sector_count(0) {}
 
 template <class T>
-forward_list<T>::forward_list(std::initializer_list<T> list,
-                              std::size_t sector_size)
-    : _begin(std::make_shared<sector>(nullptr)),
-      _end(_begin),
-      _sector_size(sector_size),
-      _sector_count(0) {
+forward_list<T>::forward_list(std::initializer_list<T> list, std::size_t sector_size)
+    : _begin(std::make_shared<sector>(nullptr)), _end(_begin), _sector_size(sector_size), _sector_count(0) {
     for (auto it = list.end() - 1; it != list.begin(); --it) {
         push_front(*it);
     }
@@ -202,8 +182,7 @@ typename forward_list<T>::iterator forward_list<T>::end() const {
 }
 
 template <class T>
-typename forward_list<T>::sector_iterator forward_list<T>::sector_begin()
-    const {
+typename forward_list<T>::sector_iterator forward_list<T>::sector_begin() const {
     return sector_iterator(_begin);
 }
 
@@ -218,8 +197,7 @@ std::size_t forward_list<T>::sector_count() const {
 }
 
 template <class T>
-forward_list<T>::iterator::iterator(std::shared_ptr<sector> sec)
-    : _sec(sec), _sec_it(_sec->begin()) {
+forward_list<T>::iterator::iterator(std::shared_ptr<sector> sec) : _sec(sec), _sec_it(_sec->begin()) {
     _sec->lock();
 }
 
@@ -229,14 +207,12 @@ forward_list<T>::iterator::~iterator() {
 }
 
 template <class T>
-forward_list<T>::iterator::iterator(const sector_iterator& it)
-    : _sec(it.get()), _sec_it(_sec->begin()) {
+forward_list<T>::iterator::iterator(const sector_iterator& it) : _sec(it.get()), _sec_it(_sec->begin()) {
     _sec->lock();
 }
 
 template <class T>
-typename forward_list<T>::iterator& forward_list<T>::iterator::operator=(
-    const sector_iterator& it) {
+typename forward_list<T>::iterator& forward_list<T>::iterator::operator=(const sector_iterator& it) {
     _sec->unlock();
     _sec = it.get();
     _sec->lock();
@@ -264,8 +240,7 @@ typename forward_list<T>::iterator forward_list<T>::iterator::operator++(int) {
     operator++();
 
     if (_curr_sec == _sec) {
-        throw std::runtime_error(
-            "cannot create two iterators on the same thread");
+        throw std::runtime_error("cannot create two iterators on the same thread");
     }
 
     auto _prev_it = iterator(_curr_sec);
@@ -290,14 +265,12 @@ T& forward_list<T>::iterator::operator*() const {
 }
 
 template <class T>
-const std::shared_ptr<typename forward_list<T>::sector>&
-forward_list<T>::iterator::get() const {
+const std::shared_ptr<typename forward_list<T>::sector>& forward_list<T>::iterator::get() const {
     return _sec;
 }
 
 template <class T>
-forward_list<T>::sector_iterator::sector_iterator(std::shared_ptr<sector> sec)
-    : _sec(sec) {}
+forward_list<T>::sector_iterator::sector_iterator(std::shared_ptr<sector> sec) : _sec(sec) {}
 
 template <class T>
 forward_list<T>::sector_iterator::sector_iterator(const iterator& it) {
@@ -305,14 +278,12 @@ forward_list<T>::sector_iterator::sector_iterator(const iterator& it) {
 }
 
 template <class T>
-typename forward_list<T>::sector_iterator&
-forward_list<T>::sector_iterator::operator=(const sector_iterator& it) {
+typename forward_list<T>::sector_iterator& forward_list<T>::sector_iterator::operator=(const sector_iterator& it) {
     _sec = it.get();
 }
 
 template <class T>
-typename forward_list<T>::sector_iterator&
-forward_list<T>::sector_iterator::operator++() {
+typename forward_list<T>::sector_iterator& forward_list<T>::sector_iterator::operator++() {
     if (_sec->next()) {
         _sec = _sec->next();
     }
@@ -320,34 +291,29 @@ forward_list<T>::sector_iterator::operator++() {
 }
 
 template <class T>
-typename forward_list<T>::sector_iterator
-forward_list<T>::sector_iterator::operator++(int) {
+typename forward_list<T>::sector_iterator forward_list<T>::sector_iterator::operator++(int) {
     auto _curr_sec = sector_iterator(_sec);
     ++(*this);
     return _curr_sec;
 }
 
 template <class T>
-bool forward_list<T>::sector_iterator::operator==(
-    const sector_iterator& other) const {
+bool forward_list<T>::sector_iterator::operator==(const sector_iterator& other) const {
     return _sec.get() == other._sec.get();
 }
 
 template <class T>
-bool forward_list<T>::sector_iterator::operator!=(
-    const sector_iterator& other) const {
+bool forward_list<T>::sector_iterator::operator!=(const sector_iterator& other) const {
     return !(*this == other);
 }
 
 template <class T>
-typename forward_list<T>::sector& forward_list<T>::sector_iterator::operator*()
-    const {
+typename forward_list<T>::sector& forward_list<T>::sector_iterator::operator*() const {
     return *_sec;
 }
 
 template <class T>
-const std::shared_ptr<typename forward_list<T>::sector>&
-forward_list<T>::sector_iterator::get() const {
+const std::shared_ptr<typename forward_list<T>::sector>& forward_list<T>::sector_iterator::get() const {
     return _sec;
 }
 

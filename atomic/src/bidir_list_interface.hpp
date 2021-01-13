@@ -11,11 +11,9 @@ template <class T>
 
 class Atomic_Blist : public boost::interprocess::interprocess_mutex {
 public:
-    class iterator
-        : public std::iterator<std::bidirectional_iterator_tag, T, T> {
+    class iterator : public std::iterator<std::bidirectional_iterator_tag, T, T> {
     public:
-        explicit iterator(std::shared_ptr<atomic_list::list_node<T>> node)
-            : _node(node) {}
+        explicit iterator(std::shared_ptr<atomic_list::list_node<T>> node) : _node(node) {}
         iterator& operator++() {
             if (_node->prev_elem) {
                 _node = _node->prev_elem;
@@ -33,9 +31,7 @@ public:
         iterator operator--(int);
 
         T& operator*() const { return _node->container; }
-        bool operator==(iterator other) const {
-            return (_node.get() == other._node.get());
-        }
+        bool operator==(iterator other) const { return (_node.get() == other._node.get()); }
         bool operator!=(iterator other) const { return !(*this == other); }
 
     private:
@@ -80,8 +76,7 @@ public:
     void push_back(T new_class) {
         this->lock();
         if (last_elem.lock()) {
-            std::shared_ptr<atomic_list::list_node<T>> tmp =
-                std::make_shared<list_node<T>>(new_class);
+            std::shared_ptr<atomic_list::list_node<T>> tmp = std::make_shared<list_node<T>>(new_class);
             last_elem.lock()->prev_elem = tmp;
             tmp->next_elem = last_elem;
             tmp->prev_elem = first_elem;
@@ -89,8 +84,7 @@ public:
             first_elem->next_elem.reset();
 
         } else {
-            std::shared_ptr<atomic_list::list_node<T>> tmp =
-                std::make_shared<list_node<T>>(new_class);
+            std::shared_ptr<atomic_list::list_node<T>> tmp = std::make_shared<list_node<T>>(new_class);
             tmp->next_elem = tmp;
             tmp->prev_elem = tmp;
             last_elem = tmp;
@@ -102,15 +96,13 @@ public:
     void push_front(T new_class) {
         this->lock();
         if (first_elem) {
-            std::shared_ptr<atomic_list::list_node<T>> tmp =
-                std::make_shared<list_node<T>>(new_class);
+            std::shared_ptr<atomic_list::list_node<T>> tmp = std::make_shared<list_node<T>>(new_class);
             tmp->prev_elem = first_elem;
             first_elem->next_elem = tmp;
             tmp->next_elem = last_elem.lock();
             first_elem = tmp;
         } else {
-            std::shared_ptr<atomic_list::list_node<T>> tmp =
-                std::make_shared<list_node<T>>(new_class);
+            std::shared_ptr<atomic_list::list_node<T>> tmp = std::make_shared<list_node<T>>(new_class);
             tmp->next_elem = tmp;
             tmp->prev_elem = tmp;
             last_elem = tmp;

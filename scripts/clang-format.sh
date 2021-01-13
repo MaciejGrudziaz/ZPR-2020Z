@@ -7,7 +7,8 @@ DIRECTORIES=(
 STYLE="{\
 BasedOnStyle: google,\
 IndentWidth: 4,\
-AccessModifierOffset: -4\
+AccessModifierOffset: -4,\
+ColumnLimit: 120\
 }"
 
 FORMAT_TMP=format.tmp
