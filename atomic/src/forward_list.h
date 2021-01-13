@@ -4,6 +4,7 @@
 #include <forward_list>
 #include <iterator>
 #include <memory>
+#include <mutex>
 
 namespace atomic {
 
@@ -19,9 +20,50 @@ class forward_list {
     };
 
 public:
+    class sector {
+    public:
+        class iterator : public std::iterator<std::forward_iterator_tag, T> {
+        public:
+            explicit iterator(std::shared_ptr<node> node);
+
+            iterator& operator++();
+            iterator operator++(int);
+            bool operator==(const iterator& other) const;
+            bool operator!=(const iterator& other) const;
+            T& operator*() const;
+
+        private:
+            std::shared_ptr<node> _node;
+        };
+
+        explicit sector(std::shared_ptr<sector> next);
+
+        void push_front(const T& val);
+        void push_front(T&& val);
+
+        iterator begin() const;
+        iterator end() const;
+
+        std::size_t size() const;
+
+        std::shared_ptr<sector> next() const;
+
+        void lock() const;
+        void unlock() const;
+
+    private:
+        std::shared_ptr<node> _begin;
+        std::shared_ptr<node> _end;
+        std::size_t _size;
+
+        std::shared_ptr<sector> _next;
+        mutable std::mutex _m;
+    };
+
     class iterator : public std::iterator<std::forward_iterator_tag, T> {
     public:
-        explicit iterator(std::shared_ptr<node> node);
+        explicit iterator(std::shared_ptr<sector> sec);
+        ~iterator();
         iterator& operator++();
         iterator operator++(int);
         bool operator==(iterator other) const;
@@ -29,24 +71,37 @@ public:
         T& operator*() const;
 
     private:
-        std::shared_ptr<node> _node;
+        std::shared_ptr<sector> _sec;
+        typename sector::iterator _sec_it;
     };
 
-    class const_iterator : public std::iterator<std::forward_iterator_tag, T, T,
-                                                const T*, const T&> {
+    //    class const_iterator : public std::iterator<std::forward_iterator_tag,
+    //    T, T, const T*, const T&> { public:
+    //        explicit const_iterator(std::shared_ptr<node> node);
+    //        const_iterator& operator++();
+    //        const_iterator operator++(int);
+    //        bool operator==(const_iterator other) const;
+    //        bool operator!=(const_iterator other) const;
+    //        const T& operator*() const;
+    //
+    //    private:
+    //        std::shared_ptr<node> _node;
+    //    };
+
+    class sector_iterator : public std::iterator<std::forward_iterator_tag, T> {
     public:
-        explicit const_iterator(std::shared_ptr<node> node);
-        const_iterator& operator++();
-        const_iterator operator++(int);
-        bool operator==(const_iterator other) const;
-        bool operator!=(const_iterator other) const;
-        const T& operator*() const;
+        explicit sector_iterator(std::shared_ptr<sector> sec);
+        sector_iterator& operator++();
+        sector_iterator operator++(int);
+        bool operator==(const sector_iterator& other) const;
+        bool operator!=(const sector_iterator& other) const;
+        sector& operator*() const;
 
     private:
-        std::shared_ptr<node> _node;
+        std::shared_ptr<sector> _sec;
     };
 
-    forward_list();
+    forward_list(std::size_t sector_size = 10);
     // forward_list(std::initializer_list<T> list);
 
     void clear();
@@ -59,11 +114,17 @@ public:
     iterator begin() const;
     iterator end() const;
 
-private:
-    std::shared_ptr<node> _begin;
-    std::shared_ptr<node> _end;
+    sector_iterator sector_begin() const;
+    sector_iterator sector_end() const;
 
-    std::size_t _size;
+    std::size_t sector_count() const;
+
+private:
+    std::shared_ptr<sector> _begin;
+    std::shared_ptr<sector> _end;
+
+    const std::size_t _sector_size;
+    std::size_t _sector_count;
 };
 
 }  // namespace atomic

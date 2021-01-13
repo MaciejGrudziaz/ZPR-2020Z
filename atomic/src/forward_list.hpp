@@ -14,37 +14,142 @@ forward_list<T>::node::node(T val, std::shared_ptr<node> next)
     : _val(val), _next(std::move(next)) {}
 
 template <class T>
-forward_list<T>::forward_list()
-    : _begin(std::make_shared<node>(nullptr)), _end(_begin), _size(0) {}
+forward_list<T>::sector::sector(std::shared_ptr<sector> next)
+    : _begin(std::make_shared<node>(nullptr)),
+      _end(_begin),
+      _size(0),
+      _next(next) {}
 
 template <class T>
-void forward_list<T>::clear() {
-    _begin = _end;
-    _size = 0;
-}
-
-template <class T>
-std::size_t forward_list<T>::size() const {
-    return _size;
-}
-
-template <class T>
-bool forward_list<T>::empty() const {
-    return _size == 0;
-}
-
-template <class T>
-void forward_list<T>::push_front(const T& val) {
+void forward_list<T>::sector::push_front(const T& val) {
     auto _node = std::make_shared<node>(val, _begin);
     _begin = _node;
     ++_size;
 }
 
 template <class T>
-void forward_list<T>::push_front(T&& val) {
-    auto _node = std::make_shared<node>(std::move(val), _begin);
+void forward_list<T>::sector::push_front(T&& val) {
+    auto _node = std::__make_shared<node>(std::move(val), _begin);
     _begin = _node;
     ++_size;
+}
+
+template <class T>
+typename forward_list<T>::sector::iterator forward_list<T>::sector::begin()
+    const {
+    return iterator(_begin);
+}
+
+template <class T>
+typename forward_list<T>::sector::iterator forward_list<T>::sector::end()
+    const {
+    return iterator(_end);
+}
+
+template <class T>
+std::size_t forward_list<T>::sector::size() const {
+    return _size;
+}
+
+template <class T>
+std::shared_ptr<typename forward_list<T>::sector>
+forward_list<T>::sector::next() const {
+    return _next;
+}
+
+template <class T>
+void forward_list<T>::sector::lock() const {
+    _m.lock();
+}
+
+template <class T>
+void forward_list<T>::sector::unlock() const {
+    _m.unlock();
+}
+
+template <class T>
+forward_list<T>::sector::iterator::iterator(std::shared_ptr<node> node)
+    : _node(node) {}
+
+template <class T>
+typename forward_list<T>::sector::iterator&
+forward_list<T>::sector::iterator::operator++() {
+    if (_node->_next) {
+        _node = _node->_next;
+    }
+    return *this;
+}
+
+template <class T>
+typename forward_list<T>::sector::iterator
+forward_list<T>::sector::iterator::operator++(int) {
+    auto curr_it = iterator(_node);
+    ++(*this);
+    return curr_it;
+}
+
+template <class T>
+bool forward_list<T>::sector::iterator::operator==(
+    const forward_list<T>::sector::iterator& other) const {
+    return _node.get() == other._node.get();
+}
+
+template <class T>
+bool forward_list<T>::sector::iterator::operator!=(
+    const forward_list<T>::sector::iterator& other) const {
+    return !(*this == other);
+}
+
+template <class T>
+T& forward_list<T>::sector::iterator::operator*() const {
+    return _node->_val;
+}
+
+template <class T>
+forward_list<T>::forward_list(std::size_t sector_size)
+    : _begin(std::make_shared<sector>(nullptr)),
+      _end(_begin),
+      _sector_size(sector_size),
+      _sector_count(0) {}
+
+template <class T>
+void forward_list<T>::clear() {
+    _begin = _end;
+}
+
+template <class T>
+std::size_t forward_list<T>::size() const {
+    std::size_t _size = 0;
+    for (auto _sec = _begin; _sec.get() != _end.get(); _sec = _sec->next()) {
+        _size += _sec->size();
+    }
+
+    return _size;
+}
+
+template <class T>
+bool forward_list<T>::empty() const {
+    return size() == 0;
+}
+
+template <class T>
+void forward_list<T>::push_front(const T& val) {
+    if (_begin->size() >= _sector_size || _begin == _end) {
+        auto _sec = std::make_shared<sector>(_begin);
+        _begin = _sec;
+        ++_sector_count;
+    }
+    _begin->push_front(val);
+}
+
+template <class T>
+void forward_list<T>::push_front(T&& val) {
+    if (_begin->size() >= _sector_size || _begin == _end) {
+        auto _sec = std::make_shared<sector>(_begin);
+        _begin = _sec;
+        ++_sector_count;
+    }
+    _begin->push_front(val);
 }
 
 template <class T>
@@ -58,28 +163,54 @@ typename forward_list<T>::iterator forward_list<T>::end() const {
 }
 
 template <class T>
-forward_list<T>::iterator::iterator(std::shared_ptr<node> node) : _node(node) {}
+typename forward_list<T>::sector_iterator forward_list<T>::sector_begin()
+    const {
+    return sector_iterator(_begin);
+}
+
+template <class T>
+typename forward_list<T>::sector_iterator forward_list<T>::sector_end() const {
+    return sector_iterator(_end);
+}
+
+template <class T>
+std::size_t forward_list<T>::sector_count() const {
+    return _sector_count;
+}
+
+template <class T>
+forward_list<T>::iterator::iterator(std::shared_ptr<sector> sec)
+    : _sec(sec), _sec_it(_sec->begin()) {
+    _sec->lock();
+}
+
+template <class T>
+forward_list<T>::iterator::~iterator() {
+    _sec->unlock();
+}
 
 template <class T>
 typename forward_list<T>::iterator& forward_list<T>::iterator::operator++() {
-    if (_node->_next) {
-        _node = _node->_next;
+    _sec_it++;
+    if (_sec_it == _sec->end() && _sec->next()) {
+        _sec->unlock();
+        _sec = _sec->next();
+        _sec->lock();
+        _sec_it = _sec->begin();
     }
     return *this;
 }
 
 template <class T>
 typename forward_list<T>::iterator forward_list<T>::iterator::operator++(int) {
-    auto curr_it = iterator(_node);
-    if (_node->_next) {
-        _node = _node->next;
-    }
+    auto curr_it = iterator(_sec);
+    ++(*this);
     return curr_it;
 }
 
 template <class T>
 bool forward_list<T>::iterator::operator==(iterator other) const {
-    return _node.get() == other._node.get();
+    return _sec_it == other._sec_it;
 }
 
 template <class T>
@@ -89,46 +220,87 @@ bool forward_list<T>::iterator::operator!=(iterator other) const {
 
 template <class T>
 T& forward_list<T>::iterator::operator*() const {
-    return _node->_val;
+    return *_sec_it;
 }
 
 template <class T>
-forward_list<T>::const_iterator::const_iterator(std::shared_ptr<node> node)
-    : _node(node) {}
+forward_list<T>::sector_iterator::sector_iterator(std::shared_ptr<sector> sec)
+    : _sec(sec) {}
 
 template <class T>
-typename forward_list<T>::const_iterator&
-forward_list<T>::const_iterator::operator++() {
-    if (_node->_next) {
-        _node = _node->_next;
+typename forward_list<T>::sector_iterator&
+forward_list<T>::sector_iterator::operator++() {
+    if (_sec->next()) {
+        _sec = _sec->next();
     }
     return *this;
 }
 
 template <class T>
-typename forward_list<T>::const_iterator
-forward_list<T>::const_iterator::operator++(int) {
-    auto curr_it = const_iterator(_node);
-    if (_node->_next) {
-        _node = _node->next;
-    }
-    return curr_it;
+typename forward_list<T>::sector_iterator
+forward_list<T>::sector_iterator::operator++(int) {
+    auto _curr_sec = sector_iterator(_sec);
+    ++(*this);
+    return _curr_sec;
 }
 
 template <class T>
-bool forward_list<T>::const_iterator::operator==(const_iterator other) const {
-    return _node.get() == other._node.get();
+bool forward_list<T>::sector_iterator::operator==(
+    const sector_iterator& other) const {
+    return _sec.get() == other._sec.get();
 }
 
 template <class T>
-bool forward_list<T>::const_iterator::operator!=(const_iterator other) const {
+bool forward_list<T>::sector_iterator::operator!=(
+    const sector_iterator& other) const {
     return !(*this == other);
 }
 
 template <class T>
-const T& forward_list<T>::const_iterator::operator*() const {
-    return _node->_val;
+typename forward_list<T>::sector& forward_list<T>::sector_iterator::operator*()
+    const {
+    return *_sec;
 }
+
+// template <class T>
+// forward_list<T>::const_iterator::const_iterator(std::shared_ptr<node> node)
+//    : _node(node) {}
+//
+// template <class T>
+// typename forward_list<T>::const_iterator&
+// forward_list<T>::const_iterator::operator++() {
+//    if (_node->_next) {
+//        _node = _node->_next;
+//    }
+//    return *this;
+//}
+//
+// template <class T>
+// typename forward_list<T>::const_iterator
+// forward_list<T>::const_iterator::operator++(int) {
+//    auto curr_it = const_iterator(_node);
+//    if (_node->_next) {
+//        _node = _node->next;
+//    }
+//    return curr_it;
+//}
+//
+// template <class T>
+// bool forward_list<T>::const_iterator::operator==(const_iterator other) const
+// {
+//    return _node.get() == other._node.get();
+//}
+//
+// template <class T>
+// bool forward_list<T>::const_iterator::operator!=(const_iterator other) const
+// {
+//    return !(*this == other);
+//}
+//
+// template <class T>
+// const T& forward_list<T>::const_iterator::operator*() const {
+//    return _node->_val;
+//}
 
 }  // namespace atomic
 

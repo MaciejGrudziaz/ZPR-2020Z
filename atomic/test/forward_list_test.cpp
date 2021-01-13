@@ -30,3 +30,23 @@ TEST(ForwardList, IteratorsTest) {
 
     EXPECT_EQ(std::accumulate(l.begin(), l.end(), 0), 15);
 }
+
+TEST(ForwardList, Sectors) {
+    atomic::forward_list<int> l(5);
+
+    for (int i = 0; i < 25; ++i) {
+        l.push_front(i);
+    }
+
+    EXPECT_EQ(l.sector_count(), 5);
+
+    auto a = (*l.sector_begin()).begin();
+    EXPECT_EQ(*a, 24);
+    EXPECT_EQ(*(++a), 23);
+    EXPECT_EQ(*(++a), 22);
+    EXPECT_EQ(*(++a), 21);
+    EXPECT_EQ(*(++a), 20);
+    EXPECT_EQ(++a, (*l.sector_begin()).end());
+
+    EXPECT_EQ(std::accumulate(l.begin(), l.end(), 0), 300);
+}
