@@ -18,15 +18,19 @@ forward_list<T>::sector::sector(std::shared_ptr<sector> next)
 template <class T>
 void forward_list<T>::sector::push_front(const T& val) {
     auto _node = std::make_shared<node>(val, _begin);
+    _m.lock();
     _begin = _node;
     ++_size;
+    _m.unlock();
 }
 
 template <class T>
 void forward_list<T>::sector::push_front(T&& val) {
     auto _node = std::__make_shared<node>(std::move(val), _begin);
+    _m.lock();
     _begin = _node;
     ++_size;
+    _m.unlock();
 }
 
 template <class T>
@@ -34,8 +38,10 @@ void forward_list<T>::sector::pop_front() {
     if (_begin == _end) {
         return;
     }
+    _m.lock();
     _begin = _begin->_next;
     --_size;
+    _m.unlock();
 }
 
 template <class T>
@@ -240,7 +246,7 @@ typename forward_list<T>::iterator forward_list<T>::iterator::operator++(int) {
     operator++();
 
     if (_curr_sec == _sec) {
-        throw std::runtime_error("cannot create two iterators on the same thread");
+        throw std::runtime_error("cannot create two iterators on the same sector in single thread (thread lock error)");
     }
 
     auto _prev_it = iterator(_curr_sec);

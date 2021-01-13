@@ -112,7 +112,7 @@ TEST(ForwardList, PopFront) {
 }
 
 TEST(ForwardList, Atomic) {
-    atomic::forward_list<int> l({1, 2, 3, 4, 5}, 1);
+    atomic::forward_list<int> l({1, 2, 3, 4, 5, 6}, 1);
 
     {
         auto it = l.begin();
