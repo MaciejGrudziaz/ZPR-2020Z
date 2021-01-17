@@ -6,10 +6,10 @@
 
 #include "./../src/bidir_list_interface.hpp"
 
-//TEST(Bidirectional_List, List_Init) { atomic_list::Atomic_Blist<int> li; }
- 
+// TEST(Bidirectional_List, List_Init) { atomic_list::Atomic_Blist<int> li; }
+
 TEST(Bidirectional_List, list_Push_and_POP_Back) {
-    atomic_list::Atomic_Blist<int> *li=new  atomic_list::Atomic_Blist<int>();
+    atomic_list::Atomic_Blist<int> *li = new atomic_list::Atomic_Blist<int>();
     li->push_back(1);
     li->push_back(2);
     li->push_back(3);
@@ -26,7 +26,7 @@ TEST(Bidirectional_List, list_Push_and_POP_Back) {
 }
 
 TEST(Bidirectional_List, list_Push_and_POP_Front) {
-    atomic_list::Atomic_Blist<int> *li=new  atomic_list::Atomic_Blist<int>();
+    atomic_list::Atomic_Blist<int> *li = new atomic_list::Atomic_Blist<int>();
     li->push_front(1);
     li->push_front(2);
     li->push_front(3);
@@ -43,7 +43,7 @@ TEST(Bidirectional_List, list_Push_and_POP_Front) {
 }
 
 TEST(Bidirectional_List, Manipulating_List_Test) {
-    atomic_list::Atomic_Blist<int> *li=new  atomic_list::Atomic_Blist<int>();
+    atomic_list::Atomic_Blist<int> *li = new atomic_list::Atomic_Blist<int>();
     li->push_back(1);
     li->push_back(2);
     li->push_back(3);
@@ -71,10 +71,8 @@ TEST(Bidirectional_List, Manipulating_List_Test) {
     delete li;
 }
 
-
-
 TEST(Bidirectional_List, Reverse_iterator_test) {
-    atomic_list::Atomic_Blist<int> *li=new  atomic_list::Atomic_Blist<int>();
+    atomic_list::Atomic_Blist<int> *li = new atomic_list::Atomic_Blist<int>();
     li->push_front(1);
     li->push_front(2);
     li->push_front(3);
@@ -83,7 +81,6 @@ TEST(Bidirectional_List, Reverse_iterator_test) {
     EXPECT_EQ(std::accumulate(li->rbegin(), li->rend(), 0), 15);
     delete li;
 }
-
 
 atomic_list::Atomic_Blist<int> *li;
 atomic_list::Atomic_Blist<int> *out;
@@ -102,44 +99,44 @@ void thread_2() {
 void thread_3() {
     for (int i = 0; i < 100; ++i) {
         li->push_back(i);
-         li->push_front(i);
+        li->push_front(i);
     }
 }
 void thread_4() {
     for (int i = 0; i < 100; ++i) {
         li->push_back(i);
-         li->push_front(i);
+        li->push_front(i);
     }
 }
 
 void r_thread_1() {
     for (int i = 0; i < 100; ++i) {
         out->push_back(li->pop_back());
-          out->push_front(li->pop_front());
+        out->push_front(li->pop_front());
     }
 }
 void r_thread_2() {
     for (int i = 0; i < 100; ++i) {
         out->push_back(li->pop_back());
-         out->push_front(li->pop_front());
+        out->push_front(li->pop_front());
     }
 }
 void r_thread_3() {
     for (int i = 0; i < 100; ++i) {
         out->push_back(li->pop_back());
-         out->push_front(li->pop_front());
+        out->push_front(li->pop_front());
     }
 }
 void r_thread_4() {
     for (int i = 0; i < 100; ++i) {
         out->push_back(li->pop_back());
-         out->push_front(li->pop_front());
+        out->push_front(li->pop_front());
     }
 }
 
 TEST(Bidirectional_List, MUTEX_Test) {
-li = new  atomic_list::Atomic_Blist<int>();
-out= new  atomic_list::Atomic_Blist<int>();
+    li = new atomic_list::Atomic_Blist<int>();
+    out = new atomic_list::Atomic_Blist<int>();
 
     for (int iterator_i = 0; iterator_i < 100; ++iterator_i) {
         std::thread thr1(thread_1);
