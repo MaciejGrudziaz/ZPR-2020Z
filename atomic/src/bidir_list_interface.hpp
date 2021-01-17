@@ -11,7 +11,7 @@ template <class T>
 
 class Atomic_Blist : public boost::interprocess::interprocess_mutex {
 public:
-    //////////////// iterator ////////////////////////////
+//////////////// iterator ////////////////////////////
     class iterator : public std::iterator<std::bidirectional_iterator_tag, T, T> {
     public:
         explicit iterator(std::shared_ptr<atomic_list::list_node<T>> node) : _node(node) {}
@@ -28,7 +28,8 @@ public:
             }
             return curr_it;
         }
-        iterator& operator--() {
+        iterator& operator--()
+        {
             if (_node->next_elem.lock()) {
                 _node = _node->next_elem.lock();
             }
@@ -44,11 +45,14 @@ public:
         std::shared_ptr<atomic_list::list_node<T>> _node;
     };
 
-    //////////////// reverse iterator ////////////////////////////
+//////////////// reverse iterator ////////////////////////////
 
-    class riterator : public std::iterator<std::bidirectional_iterator_tag, T, T> {
+        class riterator : public std::iterator<std::bidirectional_iterator_tag, T, T> {
     public:
-        explicit riterator(std::shared_ptr<atomic_list::list_node<T>> node) : _node(node) {}
+        explicit riterator(std::shared_ptr<atomic_list::list_node<T>> node) : _node(node) {
+
+
+        }
         riterator& operator--() {
             if (_node->prev_elem) {
                 _node = _node->prev_elem;
@@ -61,14 +65,16 @@ public:
             }
             return *this;
         }
-        riterator operator--(int) {
+        riterator operator--(int)
+        {
             auto curr_it = riterator(_node);
             if (_node->prev_elem) {
                 _node = _node->prev_elem;
             }
             return curr_it;
+
         }
-        riterator operator++(int) {
+        riterator operator++(int){
             auto curr_it = riterator(_node);
             if (_node->next_elem.lock()) {
                 _node = _node->next_elem.lock();
@@ -83,25 +89,29 @@ public:
     private:
         std::shared_ptr<atomic_list::list_node<T>> _node;
     };
-    //////////////// konstruktor i destruktor ////////////////////////////
-    Atomic_Blist() {
-        size = 0;
+//////////////// konstruktor i destruktor ////////////////////////////
+    Atomic_Blist() { size = 0; 
+        no_of_waiting_writers=0;
+        no_of_waiting_readers=0;
         past_last.reset();
         past_first.reset();
-        past_last = std::make_shared<list_node<T>>();
-        past_first = std::make_shared<list_node<T>>();
+        past_last= std::make_shared<list_node<T>>();
+        past_first= std::make_shared<list_node<T>>();
     }
-    ~Atomic_Blist() {
+     ~Atomic_Blist() { 
         last_elem.reset();
         first_elem.reset();
         past_last.reset();
         past_first.reset();
-    }
+      }
 
-    //////////////////// POP BACK////////////////////////////
+//////////////////// POP BACK////////////////////////////
 
     T pop_back() {
-        this->lock();
+
+        writing_mutex.lock();
+        
+
         T tmp = last_elem.lock()->get();
 
         if (size > 1) {
@@ -111,16 +121,20 @@ public:
         } else if (size <= 1) {
             last_elem.reset();
             first_elem.reset();
-            size = 0;
+            size=0;
         }
-        this->unlock();
+
+        writing_mutex.unlock();
+
         return tmp;
     }
 
-    /////////////////// POP FRONT ////////////////////////////
+/////////////////// POP FRONT ////////////////////////////
 
+    
     T pop_front() {
-        this->lock();
+        writing_mutex.lock();
+
         T tmp = first_elem->get();
         if (size > 1) {
             first_elem = first_elem->prev_elem;
@@ -129,15 +143,17 @@ public:
         } else if (size <= 1) {
             last_elem.reset();
             first_elem.reset();
-            size = 0;
+            size=0;
         }
 
-        this->unlock();
+        writing_mutex.unlock();
         return tmp;
     }
-    //////////////////// PUSH  BACK////////////////////////////
+//////////////////// PUSH  BACK////////////////////////////
     void push_back(T new_class) {
-        this->lock();
+
+        writing_mutex.lock();
+
         if (last_elem.lock()) {
             std::shared_ptr<atomic_list::list_node<T>> tmp = std::make_shared<list_node<T>>(new_class);
             last_elem.lock()->prev_elem = tmp;
@@ -149,15 +165,17 @@ public:
             last_elem = tmp;
             first_elem = tmp;
         }
-        first_elem->next_elem = past_first;
-        last_elem.lock()->prev_elem = past_last;
+        first_elem->next_elem=past_first;
+        last_elem.lock()->prev_elem=past_last;
 
         size++;
-        this->unlock();
+        writing_mutex.unlock();
     }
     //////////////////////// PUSH FRONT////////////////////////////
     void push_front(T new_class) {
-        this->lock();
+
+        writing_mutex.lock();
+
         if (first_elem) {
             std::shared_ptr<atomic_list::list_node<T>> tmp = std::make_shared<list_node<T>>(new_class);
             tmp->prev_elem = first_elem;
@@ -168,33 +186,43 @@ public:
             last_elem = tmp;
             first_elem = tmp;
         }
-        first_elem->next_elem = past_first;
-        last_elem.lock()->prev_elem = past_last;
+        first_elem->next_elem=past_first;
+        last_elem.lock()->prev_elem=past_last;
 
         size++;
-        this->unlock();
+
+        writing_mutex.unlock();
+
     }
 
-    // ITERATORY
+//ITERATORY
 
     iterator begin() { return iterator(first_elem); }
-    riterator rbegin() { return riterator(last_elem.lock()); }
+    riterator rbegin() {return riterator(last_elem.lock());}
     iterator end() { return iterator(past_last); }
     riterator rend() { return riterator(past_first); }
 
     void clear() {
-        this->lock();
+        writing_mutex.lock();
         last_elem.reset();
         first_elem.reset();
-        this->unlock();
+        writing_mutex.unlock();
+
     }
+
+
 
 private:
     std::shared_ptr<atomic_list::list_node<T>> first_elem;
     std::weak_ptr<atomic_list::list_node<T>> last_elem;
-
+    
     std::shared_ptr<atomic_list::list_node<T>> past_last;
     std::shared_ptr<atomic_list::list_node<T>> past_first;
+    int no_of_waiting_readers;
+    int no_of_waiting_writers;
+
+
+    boost::interprocess::interprocess_mutex  writing_mutex;
 
     int size;
     int elem_iterator;
