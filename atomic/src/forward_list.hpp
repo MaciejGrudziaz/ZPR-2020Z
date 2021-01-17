@@ -242,11 +242,13 @@ typename forward_list<T>::iterator& forward_list<T>::iterator::operator=(const s
 
 template <class T>
 typename forward_list<T>::iterator& forward_list<T>::iterator::operator++() {
-    _sec_it++;
+    ++_sec_it;
     if (_sec_it == _sec->end() && _sec->next()) {
         _sec->unlock();
         _sec = _sec->next();
-        _sec->lock();
+        if (!_sec->empty()) {
+            _sec->lock();
+        }
         _sec_it = _sec->begin();
     }
     return *this;
