@@ -73,9 +73,27 @@ public:
         ~iterator();
         iterator& operator++();
         iterator operator++(int);
-        bool operator==(iterator other) const;
-        bool operator!=(iterator other) const;
-        T& operator*() const;
+        bool operator==(const iterator& other) const;
+        bool operator!=(const iterator& other) const;
+        T& operator*();
+
+        const std::shared_ptr<sector>& get() const;
+
+    private:
+        std::shared_ptr<sector> _sec;
+        typename sector::iterator _sec_it;
+    };
+
+    class const_iterator {
+    public:
+        explicit const_iterator(std::shared_ptr<sector> sec);
+        const_iterator(const sector_iterator& it);
+        const const_iterator& operator=(const sector_iterator& it);
+        const const_iterator& operator++();
+        const_iterator operator++(int);
+        bool operator==(const const_iterator& other) const;
+        bool operator!=(const const_iterator& other) const;
+        const T& operator*() const;
 
         const std::shared_ptr<sector>& get() const;
 
@@ -113,8 +131,10 @@ public:
 
     void pop_front();
 
-    iterator begin() const;
-    iterator end() const;
+    iterator begin();
+    const_iterator begin() const;
+    iterator end();
+    const_iterator end() const;
 
     sector_iterator sector_begin() const;
     sector_iterator sector_end() const;

@@ -127,7 +127,11 @@ forward_list<T>::forward_list(std::initializer_list<T> list, std::size_t sector_
 
 template <class T>
 void forward_list<T>::clear() {
+    for (auto sec = sector_begin(); sec != sector_end(); ++sec) {
+        (*sec).lock();
+    }
     _begin = _end;
+    _sector_count = 0;
 }
 
 template <class T>
@@ -178,13 +182,23 @@ void forward_list<T>::pop_front() {
 }
 
 template <class T>
-typename forward_list<T>::iterator forward_list<T>::begin() const {
+typename forward_list<T>::iterator forward_list<T>::begin() {
     return iterator(_begin);
 }
 
 template <class T>
-typename forward_list<T>::iterator forward_list<T>::end() const {
+typename forward_list<T>::const_iterator forward_list<T>::begin() const {
+    return const_iterator(_begin);
+}
+
+template <class T>
+typename forward_list<T>::iterator forward_list<T>::end() {
     return iterator(_end);
+}
+
+template <class T>
+typename forward_list<T>::const_iterator forward_list<T>::end() const {
+    return const_iterator(_end);
 }
 
 template <class T>
@@ -256,22 +270,78 @@ typename forward_list<T>::iterator forward_list<T>::iterator::operator++(int) {
 }
 
 template <class T>
-bool forward_list<T>::iterator::operator==(iterator other) const {
+bool forward_list<T>::iterator::operator==(const iterator& other) const {
     return _sec_it == other._sec_it;
 }
 
 template <class T>
-bool forward_list<T>::iterator::operator!=(iterator other) const {
+bool forward_list<T>::iterator::operator!=(const iterator& other) const {
     return !(*this == other);
 }
 
 template <class T>
-T& forward_list<T>::iterator::operator*() const {
+T& forward_list<T>::iterator::operator*() {
     return *_sec_it;
 }
 
 template <class T>
 const std::shared_ptr<typename forward_list<T>::sector>& forward_list<T>::iterator::get() const {
+    return _sec;
+}
+
+template <class T>
+forward_list<T>::const_iterator::const_iterator(std::shared_ptr<sector> sec) : _sec(sec), _sec_it(_sec->begin()) {}
+
+template <class T>
+forward_list<T>::const_iterator::const_iterator(const sector_iterator& it) : _sec(it.get()), _sec_it(_sec->begin()) {}
+
+template <class T>
+const typename forward_list<T>::const_iterator& forward_list<T>::const_iterator::operator=(const sector_iterator& it) {
+    _sec = it.get();
+    _sec_it = _sec->begin();
+    return *this;
+}
+
+template <class T>
+const typename forward_list<T>::const_iterator& forward_list<T>::const_iterator::operator++() {
+    ++_sec_it;
+    if (_sec_it == _sec->end() && _sec->next()) {
+        _sec = _sec->next();
+        _sec_it = _sec->begin();
+    }
+    return *this;
+}
+
+template <class T>
+typename forward_list<T>::const_iterator forward_list<T>::const_iterator::operator++(int) {
+    auto _curr_sec = _sec;
+    auto _curr_sec_it = _sec_it;
+
+    operator++();
+
+    const_iterator _prev_it(_curr_sec);
+    _prev_it._sec_it = _curr_sec_it;
+
+    return _prev_it;
+}
+
+template <class T>
+bool forward_list<T>::const_iterator::operator==(const const_iterator& other) const {
+    return _sec_it == other._sec_it;
+}
+
+template <class T>
+bool forward_list<T>::const_iterator::operator!=(const const_iterator& other) const {
+    return !(*this == other);
+}
+
+template <class T>
+const T& forward_list<T>::const_iterator::operator*() const {
+    return *_sec_it;
+}
+
+template <class T>
+const std::shared_ptr<typename forward_list<T>::sector>& forward_list<T>::const_iterator::get() const {
     return _sec;
 }
 
@@ -322,46 +392,6 @@ template <class T>
 const std::shared_ptr<typename forward_list<T>::sector>& forward_list<T>::sector_iterator::get() const {
     return _sec;
 }
-
-// template <class T>
-// forward_list<T>::const_iterator::const_iterator(std::shared_ptr<node> node)
-//    : _node(node) {}
-//
-// template <class T>
-// typename forward_list<T>::const_iterator&
-// forward_list<T>::const_iterator::operator++() {
-//    if (_node->_next) {
-//        _node = _node->_next;
-//    }
-//    return *this;
-//}
-//
-// template <class T>
-// typename forward_list<T>::const_iterator
-// forward_list<T>::const_iterator::operator++(int) {
-//    auto curr_it = const_iterator(_node);
-//    if (_node->_next) {
-//        _node = _node->next;
-//    }
-//    return curr_it;
-//}
-//
-// template <class T>
-// bool forward_list<T>::const_iterator::operator==(const_iterator other) const
-// {
-//    return _node.get() == other._node.get();
-//}
-//
-// template <class T>
-// bool forward_list<T>::const_iterator::operator!=(const_iterator other) const
-// {
-//    return !(*this == other);
-//}
-//
-// template <class T>
-// const T& forward_list<T>::const_iterator::operator*() const {
-//    return _node->_val;
-//}
 
 }  // namespace atomic
 

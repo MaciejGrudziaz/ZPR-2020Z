@@ -124,3 +124,26 @@ TEST(ForwardList, Atomic) {
     EXPECT_EQ(*l.begin(), 9);
     EXPECT_EQ(*(++l.begin()), 8);
 }
+
+TEST(ForwardList, const_iterator) {
+    const atomic::forward_list<int> l({1, 2, 3, 4, 5, 6, 7, 8}, 5);
+
+    auto it = l.begin();
+    auto it2 = it++;
+
+    EXPECT_EQ(l.size(), 8);
+}
+
+TEST(ForwardList, clear) {
+    atomic::forward_list<int> l({1, 2, 3, 4, 5, 6, 7, 8});
+
+    EXPECT_EQ(l.size(), 8);
+    EXPECT_FALSE(l.empty());
+
+    { auto it = l.begin(); }
+
+    l.clear();
+
+    EXPECT_EQ(l.size(), 0);
+    EXPECT_TRUE(l.empty());
+}
