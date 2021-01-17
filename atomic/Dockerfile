@@ -9,7 +9,7 @@ RUN git clone -q https://github.com/google/googletest.git /googletest \
   && cd / && rm -rf /googletest
 
 COPY src /home/atomic/src
-COPY ./test /home
+COPY test /home
 WORKDIR /home
 
 RUN mkdir build && cd build && cmake .. && make
