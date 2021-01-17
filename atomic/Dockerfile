@@ -1,6 +1,6 @@
-FROM alpine:latest AS tests
+FROM alpine:latest
 
-RUN apk add --no-cache -q -f git cmake make g++
+RUN apk add --no-cache -q -f git cmake make g++ boost-dev
 
 RUN git clone -q https://github.com/google/googletest.git /googletest \
   && mkdir -p /googletest/build \
@@ -8,9 +8,8 @@ RUN git clone -q https://github.com/google/googletest.git /googletest \
   && cmake .. && make && make install \
   && cd / && rm -rf /googletest
 
-COPY atomic/ /home/
-COPY boost/ /home/
-COPY CMakeLists.txt /home/
+COPY src /home/atomic/src
+COPY ./test /home
 WORKDIR /home
 
 RUN mkdir build && cd build && cmake .. && make
