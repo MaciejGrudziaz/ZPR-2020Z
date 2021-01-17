@@ -8,8 +8,9 @@ RUN git clone -q https://github.com/google/googletest.git /googletest \
   && cmake .. && make && make install \
   && cd / && rm -rf /googletest
 
-COPY src /home/atomic/src
-ADD ./test /home
+COPY atomic/ /home/
+COPY boost/ /home/
+COPY CMakeLists.txt /home/
 WORKDIR /home
 
 RUN mkdir build && cd build && cmake .. && make
