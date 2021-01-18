@@ -20,6 +20,8 @@ class forward_list {
     };
 
 public:
+    using value_type = T;
+
     class sector {
     public:
         class iterator : public std::iterator<std::forward_iterator_tag, T> {
@@ -46,6 +48,7 @@ public:
         iterator begin() const;
         iterator end() const;
 
+        void clear();
         std::size_t size() const;
         bool empty() const;
 
@@ -53,6 +56,7 @@ public:
 
         void lock() const;
         void unlock() const;
+        bool try_lock() const;
 
     private:
         std::shared_ptr<node> _begin;
@@ -77,7 +81,10 @@ public:
         bool operator!=(const iterator& other) const;
         T& operator*();
 
-        const std::shared_ptr<sector>& get() const;
+        const std::shared_ptr<sector>& get_sector() const;
+        typename sector::iterator get_sector_it() const;
+        typename sector::iterator sector_begin() const;
+        typename sector::iterator sector_end() const;
 
     private:
         std::shared_ptr<sector> _sec;
@@ -121,6 +128,7 @@ public:
 
     forward_list(std::size_t sector_size = 10);
     forward_list(std::initializer_list<T> list, std::size_t sector_size = 10);
+    forward_list(T val, std::size_t count, std::size_t sector_size = 10);
 
     void clear();
     std::size_t size() const;

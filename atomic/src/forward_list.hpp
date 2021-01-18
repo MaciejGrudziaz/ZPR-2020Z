@@ -55,6 +55,14 @@ typename forward_list<T>::sector::iterator forward_list<T>::sector::end() const 
 }
 
 template <class T>
+void forward_list<T>::sector::clear() {
+    _m.lock();
+    _begin = _end;
+    _size = 0;
+    _m.unlock();
+}
+
+template <class T>
 std::size_t forward_list<T>::sector::size() const {
     return _size;
 }
@@ -77,6 +85,11 @@ void forward_list<T>::sector::lock() const {
 template <class T>
 void forward_list<T>::sector::unlock() const {
     _m.unlock();
+}
+
+template <class T>
+bool forward_list<T>::sector::try_lock() const {
+    return _m.try_lock();
 }
 
 template <class T>
@@ -123,6 +136,14 @@ forward_list<T>::forward_list(std::initializer_list<T> list, std::size_t sector_
         push_front(*it);
     }
     push_front(*list.begin());
+}
+
+template <class T>
+forward_list<T>::forward_list(T val, std::size_t count, std::size_t sector_size)
+    : _begin(std::make_shared<sector>(nullptr)), _end(_begin), _sector_size(sector_size), _sector_count(0) {
+    for (std::size_t i = 0; i < count; ++i) {
+        push_front(val);
+    }
 }
 
 template <class T>
@@ -218,17 +239,31 @@ std::size_t forward_list<T>::sector_count() const {
 
 template <class T>
 forward_list<T>::iterator::iterator(std::shared_ptr<sector> sec) : _sec(sec), _sec_it(_sec->begin()) {
+    if (!_sec->next()) {
+        return;
+    }
+    //    if (!_sec->try_lock()) {
+    //        throw std::runtime_error("cannot create two iterators on the same sector at one time (thread lock
+    //        error)");
+    //    }
+    _sec->lock();
+}
+
+template <class T>
+forward_list<T>::iterator::iterator(const sector_iterator& it) : _sec(it.get()), _sec_it(_sec->begin()) {
+    if (!_sec->next()) {
+        return;
+    }
+    //    if (!_sec->try_lock()) {
+    //        throw std::runtime_error("cannot create two iterators on the same sector at one time (thread lock
+    //        error)");
+    //    }
     _sec->lock();
 }
 
 template <class T>
 forward_list<T>::iterator::~iterator() {
     _sec->unlock();
-}
-
-template <class T>
-forward_list<T>::iterator::iterator(const sector_iterator& it) : _sec(it.get()), _sec_it(_sec->begin()) {
-    _sec->lock();
 }
 
 template <class T>
@@ -246,7 +281,7 @@ typename forward_list<T>::iterator& forward_list<T>::iterator::operator++() {
     if (_sec_it == _sec->end() && _sec->next()) {
         _sec->unlock();
         _sec = _sec->next();
-        if (!_sec->empty()) {
+        if (_sec->next()) {
             _sec->lock();
         }
         _sec_it = _sec->begin();
@@ -262,7 +297,7 @@ typename forward_list<T>::iterator forward_list<T>::iterator::operator++(int) {
     operator++();
 
     if (_curr_sec == _sec) {
-        throw std::runtime_error("cannot create two iterators on the same sector in single thread (thread lock error)");
+        throw std::runtime_error("cannot create two iterators on the same sector at one time (thread lock error)");
     }
 
     auto _prev_it = iterator(_curr_sec);
@@ -287,8 +322,23 @@ T& forward_list<T>::iterator::operator*() {
 }
 
 template <class T>
-const std::shared_ptr<typename forward_list<T>::sector>& forward_list<T>::iterator::get() const {
+const std::shared_ptr<typename forward_list<T>::sector>& forward_list<T>::iterator::get_sector() const {
     return _sec;
+}
+
+template <class T>
+typename forward_list<T>::sector::iterator forward_list<T>::iterator::get_sector_it() const {
+    return _sec_it;
+}
+
+template <class T>
+typename forward_list<T>::sector::iterator forward_list<T>::iterator::sector_begin() const {
+    return _sec->begin();
+}
+
+template <class T>
+typename forward_list<T>::sector::iterator forward_list<T>::iterator::sector_end() const {
+    return _sec->end();
 }
 
 template <class T>
@@ -352,12 +402,13 @@ forward_list<T>::sector_iterator::sector_iterator(std::shared_ptr<sector> sec) :
 
 template <class T>
 forward_list<T>::sector_iterator::sector_iterator(const iterator& it) {
-    _sec = it.get();
+    _sec = it.get_sector();
 }
 
 template <class T>
 typename forward_list<T>::sector_iterator& forward_list<T>::sector_iterator::operator=(const sector_iterator& it) {
     _sec = it.get();
+    return *this;
 }
 
 template <class T>

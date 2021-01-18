@@ -14,6 +14,7 @@ include_directories(${CMAKE_SOURCE_DIR}/atomic/src)
 
 add_executable(${PROJECT_NAME}
     forward_list_test.cpp
+    forward_list_threads_test.cpp
     list_test.cpp
 )
 
