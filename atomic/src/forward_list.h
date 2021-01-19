@@ -24,20 +24,46 @@ public:
 
     class sector {
     public:
-        class iterator : public std::iterator<std::forward_iterator_tag, T> {
+        class const_iterator;
+
+        class iterator {
         public:
             explicit iterator(std::shared_ptr<node> node, sector& parent);
             ~iterator();
+            iterator& operator=(iterator&& it);
 
             iterator& operator++();
-            iterator operator++(int);
+            // iterator operator++(int);
             bool operator==(const iterator& other) const;
+            bool operator==(const const_iterator& other) const;
             bool operator!=(const iterator& other) const;
+            bool operator!=(const const_iterator& other) const;
             T& operator*() const;
+
+            const std::shared_ptr<node> get() const;
 
         private:
             std::shared_ptr<node> _node;
-            sector& _parent;
+            sector* _parent;
+        };
+
+        class const_iterator {
+        public:
+            explicit const_iterator(std::shared_ptr<node> node);
+            const_iterator& operator=(const const_iterator& it);
+
+            const_iterator& operator++();
+            const_iterator operator++(int);
+            bool operator==(const const_iterator& other) const;
+            bool operator==(const iterator& other) const;
+            bool operator!=(const const_iterator& other) const;
+            bool operator!=(const iterator& other) const;
+            const T& operator*() const;
+
+            const std::shared_ptr<node> get() const;
+
+        private:
+            std::shared_ptr<node> _node;
         };
 
         explicit sector(std::shared_ptr<sector> next);
@@ -47,8 +73,13 @@ public:
 
         void pop_front();
 
-        iterator begin() const;
-        iterator end() const;
+        iterator begin();
+        const_iterator begin() const;
+        const_iterator cbegin() const;
+
+        iterator end();
+        const_iterator end() const;
+        const_iterator cend() const;
 
         void clear();
         std::size_t size() const;
@@ -56,9 +87,9 @@ public:
 
         std::shared_ptr<sector> next() const;
 
-//        void lock() const;
-//        void unlock() const;
-//        bool try_lock() const;
+        //        void lock() const;
+        //        void unlock() const;
+        //        bool try_lock() const;
 
     private:
         std::shared_ptr<node> _begin;
@@ -78,14 +109,15 @@ public:
         iterator& operator=(const sector_iterator& it);
         ~iterator();
         iterator& operator++();
-        iterator operator++(int);
+        //        iterator operator++(int);
         bool operator==(const iterator& other) const;
         bool operator!=(const iterator& other) const;
         T& operator*();
 
         const std::shared_ptr<sector>& get_sector() const;
-        const typename sector::iterator& get_sector_it() const;
-        typename sector::iterator sector_end() const;
+        typename sector::const_iterator& get_sector_it() const;
+        typename sector::const_iterator sector_begin() const;
+        typename sector::const_iterator sector_end() const;
 
     private:
         std::shared_ptr<sector> _sec;
@@ -95,6 +127,7 @@ public:
     class const_iterator {
     public:
         explicit const_iterator(std::shared_ptr<sector> sec);
+        const_iterator(const const_iterator& it);
         const_iterator(const sector_iterator& it);
         const const_iterator& operator=(const sector_iterator& it);
         const const_iterator& operator++();
@@ -107,7 +140,7 @@ public:
 
     private:
         std::shared_ptr<sector> _sec;
-        typename sector::iterator _sec_it;
+        typename sector::const_iterator _sec_it;
     };
 
     class sector_iterator : public std::iterator<std::forward_iterator_tag, T> {
@@ -142,8 +175,10 @@ public:
 
     iterator begin();
     const_iterator begin() const;
+    const_iterator cbegin() const;
     iterator end();
     const_iterator end() const;
+    const_iterator cend() const;
 
     sector_iterator sector_begin() const;
     sector_iterator sector_end() const;
