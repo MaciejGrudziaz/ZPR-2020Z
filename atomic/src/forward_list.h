@@ -1,14 +1,14 @@
 #ifndef ATOMIC_FORWARD_LIST_H
 #define ATOMIC_FORWARD_LIST_H
 
-#include <forward_list>
-#include <iterator>
 #include <memory>
 #include <mutex>
 
+#include "thread_policy.h"
+
 namespace atomic {
 
-template <class T>
+template <class T, typename lock_policy = exception_policy>
 class forward_list {
     struct node {
     public:
@@ -26,7 +26,8 @@ public:
     public:
         class iterator : public std::iterator<std::forward_iterator_tag, T> {
         public:
-            explicit iterator(std::shared_ptr<node> node);
+            explicit iterator(std::shared_ptr<node> node, sector& parent);
+            ~iterator();
 
             iterator& operator++();
             iterator operator++(int);
@@ -36,6 +37,7 @@ public:
 
         private:
             std::shared_ptr<node> _node;
+            sector& _parent;
         };
 
         explicit sector(std::shared_ptr<sector> next);
@@ -54,9 +56,9 @@ public:
 
         std::shared_ptr<sector> next() const;
 
-        void lock() const;
-        void unlock() const;
-        bool try_lock() const;
+//        void lock() const;
+//        void unlock() const;
+//        bool try_lock() const;
 
     private:
         std::shared_ptr<node> _begin;
@@ -82,8 +84,7 @@ public:
         T& operator*();
 
         const std::shared_ptr<sector>& get_sector() const;
-        typename sector::iterator get_sector_it() const;
-        typename sector::iterator sector_begin() const;
+        const typename sector::iterator& get_sector_it() const;
         typename sector::iterator sector_end() const;
 
     private:
