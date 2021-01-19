@@ -60,17 +60,13 @@ TEST(Bidirectional_List, Manipulating_List_Test) {
         EXPECT_EQ(*ptr, i);
         ++i;
     }
-    i = 1;
-    for (auto ptr = li->begin(); ptr != li->end(); ptr++)  // incrementtion
-    {
-        EXPECT_EQ(*ptr, i);
-        i++;
-    }
+std::cout<<"/////////////////////////"<<std::endl;
 
     EXPECT_EQ(std::accumulate(li->begin(), li->end(), 0), 15);
     delete li;
 }
 
+/*
 TEST(Bidirectional_List, Reverse_iterator_test) {
     atomic_list::Atomic_Blist<int> *li = new atomic_list::Atomic_Blist<int>();
     li->push_front(1);
@@ -81,6 +77,7 @@ TEST(Bidirectional_List, Reverse_iterator_test) {
     EXPECT_EQ(std::accumulate(li->rbegin(), li->rend(), 0), 15);
     delete li;
 }
+
 
 atomic_list::Atomic_Blist<int> *li;
 atomic_list::Atomic_Blist<int> *out;
@@ -134,7 +131,14 @@ void r_thread_4() {
     }
 }
 
-TEST(Bidirectional_List, MUTEX_Test) {
+void acc_thread()
+{  
+ //   for (int i = 0; i < 100; ++i) {
+   // std::accumulate(li->begin(), li->end(), 0);
+  //     }
+}
+
+TEST(Bidirectional_List, MUTEX_Test1) {
     li = new atomic_list::Atomic_Blist<int>();
     out = new atomic_list::Atomic_Blist<int>();
 
@@ -144,10 +148,12 @@ TEST(Bidirectional_List, MUTEX_Test) {
         std::thread thr3(thread_3);
         std::thread thr4(thread_4);
 
+
         thr1.join();
         thr2.join();
         thr3.join();
         thr4.join();
+
         int expected = 0;
 
         for (int i = 0; i < 100; ++i) {
@@ -161,12 +167,13 @@ TEST(Bidirectional_List, MUTEX_Test) {
         std::thread rthr3(r_thread_3);
         std::thread rthr4(r_thread_4);
 
+
         rthr1.join();
         rthr2.join();
         rthr3.join();
         rthr4.join();
 
-        out->push_back(0);
+
         EXPECT_EQ(std::accumulate(out->begin(), out->end(), 0), expected);
 
         out->clear();
@@ -175,3 +182,47 @@ TEST(Bidirectional_List, MUTEX_Test) {
     delete li;
     delete out;
 }
+
+
+TEST(Bidirectional_List, MUTEX_Test2) {
+    li = new atomic_list::Atomic_Blist<int>();
+    out = new atomic_list::Atomic_Blist<int>();
+
+    std::thread thr1(thread_1);
+    std::thread thr2(thread_2);
+    std::thread thr3(thread_3);
+    std::thread thr4(thread_4);
+
+
+
+    std::thread acc1(acc_thread);
+    //std::thread acc2(acc_thread);
+    //std::thread acc3(acc_thread);
+
+
+    acc1.join();
+    //acc2.join();
+    //acc3.join();
+
+    thr1.join();
+    thr2.join();
+    thr3.join();
+    thr4.join();
+    int expected = 0;
+
+
+        std::thread rthr1(r_thread_1);
+
+    for (int i = 0; i < 100; ++i) {
+        expected = expected + (i);
+    }
+    expected = expected * 8;
+    EXPECT_EQ(std::accumulate(li->begin(), li->end(), 0), expected);
+
+    out->clear();
+    li->clear();
+ 
+    delete li;
+    delete out;
+}
+*/
