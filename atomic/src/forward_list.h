@@ -34,7 +34,6 @@ public:
             iterator& operator=(iterator&& it);
 
             iterator& operator++();
-            // iterator operator++(int);
             bool operator==(const iterator& other) const;
             bool operator==(const const_iterator& other) const;
             bool operator!=(const iterator& other) const;
@@ -69,7 +68,6 @@ public:
         };
 
         explicit sector(std::shared_ptr<sector> next);
-        ~sector();
 
         void push_front(const T& val);
         void push_front(T&& val);
@@ -89,10 +87,6 @@ public:
         bool empty() const;
 
         std::shared_ptr<sector> next() const;
-
-        //        void lock() const;
-        //        void unlock() const;
-        //        bool try_lock() const;
 
     private:
         std::shared_ptr<node> _begin;
@@ -164,7 +158,6 @@ public:
     forward_list(std::size_t sector_size = 10);
     forward_list(std::initializer_list<T> list, std::size_t sector_size = 10);
     forward_list(T val, std::size_t count, std::size_t sector_size = 10);
-    ~forward_list();
 
     void clear();
     std::size_t size() const;
