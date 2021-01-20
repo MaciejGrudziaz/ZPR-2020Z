@@ -16,6 +16,11 @@ forward_list<T, lock_policy>::sector::sector(std::shared_ptr<sector> next)
     : _begin(std::make_shared<node>(nullptr)), _end(_begin), _size(0), _next(next) {}
 
 template <class T, typename lock_policy>
+forward_list<T, lock_policy>::sector::sector::~sector() {
+    // clear();
+}
+
+template <class T, typename lock_policy>
 void forward_list<T, lock_policy>::sector::push_front(const T& val) {
     auto _node = std::make_shared<node>(val, _begin);
     _m.lock();
@@ -111,7 +116,8 @@ template <class T, typename lock_policy>
 forward_list<T, lock_policy>::sector::iterator::iterator(std::shared_ptr<node> node, sector& parent)
     : _node(node), _parent(&parent) {
     if (_parent->_next) {
-        _parent->_m.lock();
+        //_parent->_m.lock();
+        lock_policy::execute(_parent->_m);
     }
 }
 
@@ -129,6 +135,8 @@ typename forward_list<T, lock_policy>::sector::iterator& forward_list<T, lock_po
     //    _parent = it._parent;
     //    _parent._m.lock();
     //    _node = it._node;
+    _parent->_m.unlock();
+
     _node = std::move(it._node);
     _parent = it._parent;
 
@@ -188,6 +196,9 @@ const std::shared_ptr<typename forward_list<T, lock_policy>::node> forward_list<
 
 template <class T, typename lock_policy>
 forward_list<T, lock_policy>::sector::const_iterator::const_iterator(std::shared_ptr<node> node) : _node(node) {}
+
+template <class T, typename lock_policy>
+forward_list<T, lock_policy>::sector::const_iterator::const_iterator(const iterator& it) : _node(it.get()) {}
 
 template <class T, typename lock_policy>
 typename forward_list<T, lock_policy>::sector::const_iterator&
@@ -263,6 +274,11 @@ forward_list<T, lock_policy>::forward_list(T val, std::size_t count, std::size_t
     for (std::size_t i = 0; i < count; ++i) {
         push_front(val);
     }
+}
+
+template <class T, typename lock_policy>
+forward_list<T, lock_policy>::~forward_list() {
+    // clear();
 }
 
 template <class T, typename lock_policy>
@@ -381,6 +397,12 @@ forward_list<T, lock_policy>::iterator::iterator(std::shared_ptr<sector> sec) : 
 }
 
 template <class T, typename lock_policy>
+forward_list<T, lock_policy>::iterator::iterator(iterator&& it) {
+    _sec = std::move(it._sec);
+    _sec_it = std::move(it._sec_it);
+}
+
+template <class T, typename lock_policy>
 forward_list<T, lock_policy>::iterator::iterator(const sector_iterator& it) : _sec(it.get()), _sec_it(_sec->begin()) {
     //    if (!_sec->next()) {
     //        return;
@@ -395,6 +417,13 @@ forward_list<T, lock_policy>::iterator::iterator(const sector_iterator& it) : _s
 template <class T, typename lock_policy>
 forward_list<T, lock_policy>::iterator::~iterator() {
     //_sec->unlock();
+}
+
+template <class T, typename lock_policy>
+typename forward_list<T, lock_policy>::iterator& forward_list<T, lock_policy>::iterator::operator=(iterator&& it) {
+    _sec = std::move(it._sec);
+    _sec_it = std::move(it._sec_it);
+    return *this;
 }
 
 template <class T, typename lock_policy>
@@ -453,29 +482,36 @@ T& forward_list<T, lock_policy>::iterator::operator*() {
     return *_sec_it;
 }
 
-template <class T, typename lock_policy>
-const std::shared_ptr<typename forward_list<T, lock_policy>::sector>&
-forward_list<T, lock_policy>::iterator::get_sector() const {
-    return _sec;
-}
+// template <class T, typename lock_policy>
+// const std::shared_ptr<typename forward_list<T, lock_policy>::sector>&
+// forward_list<T, lock_policy>::iterator::get_sector() const {
+//    return _sec;
+//}
 
 template <class T, typename lock_policy>
-typename forward_list<T, lock_policy>::sector::const_iterator& forward_list<T, lock_policy>::iterator::get_sector_it()
-    const {
-    return _sec_it;
+bool forward_list<T, lock_policy>::iterator::is_sector_end() const {
+    typename forward_list<T, lock_policy>::sector::const_iterator c_it(_sec_it);
+    ++c_it;
+    return c_it == _sec->cend();
 }
 
-template <class T, typename lock_policy>
-typename forward_list<T, lock_policy>::sector::const_iterator forward_list<T, lock_policy>::iterator::sector_begin()
-    const {
-    return _sec->begin();
-}
-
-template <class T, typename lock_policy>
-typename forward_list<T, lock_policy>::sector::const_iterator forward_list<T, lock_policy>::iterator::sector_end()
-    const {
-    return _sec->end();
-}
+// template <class T, typename lock_policy>
+// typename forward_list<T, lock_policy>::sector::const_iterator forward_list<T, lock_policy>::iterator::get_sector_it()
+//    const {
+//    return typename forward_list<T, lock_policy>::sector::const_iterator(_sec_it);
+//}
+//
+// template <class T, typename lock_policy>
+// typename forward_list<T, lock_policy>::sector::const_iterator forward_list<T, lock_policy>::iterator::sector_begin()
+//    const {
+//    return _sec->cbegin();
+//}
+//
+// template <class T, typename lock_policy>
+// typename forward_list<T, lock_policy>::sector::const_iterator forward_list<T, lock_policy>::iterator::sector_end()
+//    const {
+//    return _sec->cend();
+//}
 
 template <class T, typename lock_policy>
 forward_list<T, lock_policy>::const_iterator::const_iterator(std::shared_ptr<sector> sec)

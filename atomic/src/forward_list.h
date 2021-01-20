@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <mutex>
+#include <optional>
 
 #include "thread_policy.h"
 
@@ -50,6 +51,7 @@ public:
         class const_iterator {
         public:
             explicit const_iterator(std::shared_ptr<node> node);
+            const_iterator(const iterator& it);
             const_iterator& operator=(const const_iterator& it);
 
             const_iterator& operator++();
@@ -67,6 +69,7 @@ public:
         };
 
         explicit sector(std::shared_ptr<sector> next);
+        ~sector();
 
         void push_front(const T& val);
         void push_front(T&& val);
@@ -105,26 +108,24 @@ public:
     class iterator : public std::iterator<std::forward_iterator_tag, T> {
     public:
         explicit iterator(std::shared_ptr<sector> sec);
+        iterator(iterator&& it);
         iterator(const sector_iterator& it);
+        iterator& operator=(iterator&& it);
         iterator& operator=(const sector_iterator& it);
         ~iterator();
         iterator& operator++();
-        //        iterator operator++(int);
         bool operator==(const iterator& other) const;
         bool operator!=(const iterator& other) const;
         T& operator*();
 
-        const std::shared_ptr<sector>& get_sector() const;
-        typename sector::const_iterator& get_sector_it() const;
-        typename sector::const_iterator sector_begin() const;
-        typename sector::const_iterator sector_end() const;
+        bool is_sector_end() const;
 
     private:
         std::shared_ptr<sector> _sec;
         typename sector::iterator _sec_it;
     };
 
-    class const_iterator {
+    class const_iterator : public std::iterator<std::forward_iterator_tag, T, T, const T*, const T&> {
     public:
         explicit const_iterator(std::shared_ptr<sector> sec);
         const_iterator(const const_iterator& it);
@@ -163,6 +164,7 @@ public:
     forward_list(std::size_t sector_size = 10);
     forward_list(std::initializer_list<T> list, std::size_t sector_size = 10);
     forward_list(T val, std::size_t count, std::size_t sector_size = 10);
+    ~forward_list();
 
     void clear();
     std::size_t size() const;

@@ -76,14 +76,14 @@ TEST(ForwardListTest, Iterators) {
 }
 
 TEST(ForwardListTest, FetchMultipleIteratorsForSingleSector) {
-    //    atomic::forward_list<int> l({1, 2, 3, 4, 5});
-    //
-    //    auto it = l.begin();
-    //    EXPECT_THROW(l.begin(), std::runtime_error);
-    //    EXPECT_THROW(it++, std::runtime_error);
-    //
-    //    auto sec = l.sector_begin();
-    //    EXPECT_THROW(atomic::forward_list<int>::iterator it2(sec), std::runtime_error);
+    atomic::forward_list<int> l({1, 2, 3, 4, 5});
+
+    auto it = l.begin();
+    EXPECT_THROW(l.begin(), std::runtime_error);
+    // EXPECT_THROW(it++, std::runtime_error);
+
+    auto sec = l.sector_begin();
+    EXPECT_THROW(atomic::forward_list<int>::iterator it2(sec), std::runtime_error);
 }
 
 TEST(ForwardListTest, FetchMultipleIteratorsForMultipleSectors) {
@@ -133,16 +133,16 @@ TEST(ForwardListTest, NonBlockingEndAccessTest) {
 }
 
 TEST(ForwardListTest, StdAlgorithmsTest) {
-    //    atomic::forward_list<int> l({1, 2, 3, 4, 5});
-    //
-    //    EXPECT_EQ(std::accumulate(l.begin(), l.end(), 0), 15);
-    //    EXPECT_NE(std::find(l.begin(), l.end(), 3), l.end());
-    //    EXPECT_EQ(std::find(l.begin(), l.end(), 8), l.end());
-    //    EXPECT_EQ(std::count_if(l.begin(), l.end(), [](int val) -> bool { return val % 2; }), 3);
-    //
-    //    atomic::forward_list<int> l2;
-    //    std::transform(l.begin(), l.end(), std::front_inserter(l2), [](int val) { return val * 10; });
-    //
-    //    EXPECT_EQ(l2.size(), 5);
-    //    EXPECT_EQ(*l2.begin(), 50);
+    atomic::forward_list<int> l({1, 2, 3, 4, 5});
+
+    EXPECT_EQ(std::accumulate(l.cbegin(), l.cend(), 0), 15);
+    EXPECT_NE(std::find(l.cbegin(), l.cend(), 3), l.cend());
+    EXPECT_EQ(std::find(l.cbegin(), l.cend(), 8), l.cend());
+    EXPECT_EQ(std::count_if(l.cbegin(), l.cend(), [](int val) -> bool { return val % 2; }), 3);
+
+    atomic::forward_list<int> l2;
+    std::transform(l.begin(), l.end(), std::front_inserter(l2), [](int val) { return val * 10; });
+
+    EXPECT_EQ(l2.size(), 5);
+    EXPECT_EQ(*l2.begin(), 50);
 }

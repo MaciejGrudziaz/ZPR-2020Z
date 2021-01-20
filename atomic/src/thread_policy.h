@@ -5,6 +5,10 @@
 
 namespace atomic {
 
+struct ignore_policy {
+    static void execute(std::mutex& l) {}
+};
+
 struct lock_policy {
     static void execute(std::mutex& l) { l.lock(); }
 };
