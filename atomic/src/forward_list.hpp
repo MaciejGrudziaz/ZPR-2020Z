@@ -107,6 +107,10 @@ forward_list<T, lock_policy>::sector::iterator::iterator(std::shared_ptr<node> n
 }
 
 template <class T, typename lock_policy>
+forward_list<T, lock_policy>::sector::iterator::iterator(iterator&& it)
+    : _node(std::move(it._node)), _parent(it._parent) {}
+
+template <class T, typename lock_policy>
 forward_list<T, lock_policy>::sector::iterator::~iterator() {
     _parent->_m.unlock();
 }
@@ -352,10 +356,8 @@ template <class T, typename lock_policy>
 forward_list<T, lock_policy>::iterator::iterator(std::shared_ptr<sector> sec) : _sec(sec), _sec_it(_sec->begin()) {}
 
 template <class T, typename lock_policy>
-forward_list<T, lock_policy>::iterator::iterator(iterator&& it) {
-    _sec = std::move(it._sec);
-    _sec_it = std::move(it._sec_it);
-}
+forward_list<T, lock_policy>::iterator::iterator(iterator&& it)
+    : _sec(std::move(it._sec)), _sec_it(std::forward<typename sector::iterator>(it._sec_it)) {}
 
 template <class T, typename lock_policy>
 forward_list<T, lock_policy>::iterator::iterator(const sector_iterator& it) : _sec(it.get()), _sec_it(_sec->begin()) {}

@@ -10,7 +10,7 @@ TEST(ForwardListThreadTest, ProducerConsumerTest) {
 
     const int SIZE = 100;
     const int COUNT = 10000;
-    List l(0, 2 * SIZE, SIZE);
+    List l(0, 3 * SIZE, SIZE);
 
     int consumed = 0;
 

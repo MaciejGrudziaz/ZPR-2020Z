@@ -80,7 +80,6 @@ TEST(ForwardListTest, FetchMultipleIteratorsForSingleSector) {
 
     auto it = l.begin();
     EXPECT_THROW(l.begin(), std::runtime_error);
-    // EXPECT_THROW(it++, std::runtime_error);
 
     auto sec = l.sector_begin();
     EXPECT_THROW(atomic::forward_list<int>::iterator it2(sec), std::runtime_error);

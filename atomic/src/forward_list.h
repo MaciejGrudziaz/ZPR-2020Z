@@ -30,6 +30,7 @@ public:
         class iterator {
         public:
             explicit iterator(std::shared_ptr<node> node, sector& parent);
+            iterator(iterator&& it);
             ~iterator();
             iterator& operator=(iterator&& it);
 
