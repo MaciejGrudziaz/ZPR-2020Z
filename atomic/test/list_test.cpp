@@ -240,7 +240,7 @@ TEST(Bidirectional_List, MUTEX_Test2) {
     delete out;
 }
 
-
+/*
 TEST(Bidirectional_List, MUTEX_Test3) {
     li = new atomic_list::Atomic_Blist<int>();
     out = new atomic_list::Atomic_Blist<int>();
@@ -294,3 +294,4 @@ TEST(Bidirectional_List, MUTEX_Test3) {
     delete li;
     delete out;
 }
+*/
