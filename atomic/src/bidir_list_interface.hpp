@@ -114,9 +114,11 @@ public:
 
 
         T& operator*() const { return _node->container; }
-        bool operator==(riterator other) const { return (_node.get() == other._node.get()); }
-        bool operator!=(riterator other) const { return !(*this == other); }
+        bool operator==(const riterator &other) const { return (_node.get() == other._node.get()); }
+        bool operator!=(const riterator &other) const { return !(*this == other); }
 
+
+        
     private:
         std::shared_ptr<atomic_list::list_node<T>> _node;
         std::atomic<int>  *_reader_counter;
@@ -289,6 +291,28 @@ public:
         leave();
     }
 
+
+    void insert(const iterator &iter ,T new_class)
+    {
+        enter();
+        if(no_of_active_readers.load()>0){
+            no_of_waiting_writers.fetch_add(1);
+            wait(mozna_pisac);
+            no_of_waiting_writers.fetch_add(-1);
+            std::shared_ptr<atomic_list::list_node<T>> tmp = std::make_shared<list_node<T>>(new_class);
+                }
+        someone_is_writing=1;
+
+        //inserting code
+
+        if(no_of_waiting_readers.load()>0)
+            signal(mozna_czytac);
+        if(no_of_waiting_writers.load()>0)
+            signal(mozna_pisac);
+        someone_is_writing=0;
+        leave();
+    }
+    
     // ITERATORY
 
     iterator begin() {    	enter();    
@@ -337,6 +361,7 @@ public:
 
         leave();
     }
+
     int gsize()
     {
         enter();

@@ -148,7 +148,7 @@ void r_thread_4() {
 
 void acc_thread()
 {  
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 1000; ++i) {
     std::accumulate(li->begin(), li->end(), 0);
        }
 }
@@ -241,13 +241,56 @@ TEST(Bidirectional_List, MUTEX_Test2) {
 }
 
 
-TEST(Bidirectional_List, Last_test) {
-    atomic_list::Atomic_Blist<int> *li = new atomic_list::Atomic_Blist<int>();
-    li->push_front(1);
-    li->push_front(2);
-    li->push_front(3);
-    li->push_front(4);
-    li->push_front(5);
-    EXPECT_EQ(std::accumulate(li->rbegin(), li->rend(), 0), 15);
+TEST(Bidirectional_List, MUTEX_Test3) {
+    li = new atomic_list::Atomic_Blist<int>();
+    out = new atomic_list::Atomic_Blist<int>();
+
+    std::thread thr1(thread_1);
+    std::thread thr2(thread_2);
+    std::thread thr3(thread_3);
+    std::thread thr4(thread_4);
+
+
+
+    std::thread acc1(acc_thread);
+    std::thread acc2(acc_thread);
+    std::thread acc3(acc_thread);
+
+
+
+    std::thread rthr1(r_thread_1);
+    std::thread rthr2(r_thread_2);
+    std::thread rthr3(r_thread_3);
+    std::thread rthr4(r_thread_4);
+
+
+    rthr1.join();
+    rthr2.join();
+    rthr3.join();
+    rthr4.join();
+
+
+    acc1.join();
+    acc2.join();
+    acc3.join();
+
+    thr1.join();
+    thr2.join();
+    thr3.join();
+    thr4.join();
+
+    int expected = 0;
+      
+
+    for (int i = 0; i < 100; ++i) {
+        expected = expected + (i);
+    }
+    expected = expected * 8;
+    EXPECT_EQ(std::accumulate(out->begin(), out->end(), 0), expected);
+
+    out->clear();
+    li->clear();
+  
     delete li;
+    delete out;
 }
